@@ -2,6 +2,8 @@
 
 **Select text in any Mac app, press one shortcut, and hear it read aloud.**
 
+One of [six free, open-source Mac apps](#more-from-ciro-cesar-maciel) by [Ciro Cesar Maciel](https://ciromaciel.click/?ref=oss-text-to-speech).
+
 Two voices: Rafael, a natural Brazilian Portuguese voice from [Fish Audio](https://fish.audio), over the internet; or [Piper](https://github.com/rhasspy/piper), which runs on your Mac with no network at all. A small floating player shows the word being spoken and goes away when the reading ends. No account, no telemetry. A menu bar app built with Tauri and Rust.
 
 [Português](README.pt-BR.md)
@@ -94,6 +96,19 @@ Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-Made by [Ciro Cesar Maciel](https://ciromaciel.click/?ref=oss-text-to-speech). I build tools and show how to use them: more [free tools](https://ciromaciel.click/tools?ref=oss-text-to-speech) and [the Text to Speech page](https://ciromaciel.click/tools/text-to-speech?ref=oss-text-to-speech), where the same voice reads any text in the browser.
+## More from Ciro Cesar Maciel
 
-**Want the next one?** [Follow @ciro-maciel](https://github.com/ciro-maciel) for the next open-source tools, and click **Watch → Custom → Releases** above to hear about every new version.
+I build software on my own, with a team of AI agents, and open what I can. These are six native Mac apps, all free, MIT, signed and notarized by Apple, in English and Brazilian Portuguese:
+
+| App | What it does |
+| --- | --- |
+| [Cleaner](https://github.com/ciro-maciel/cleaner) | The Mac cleaner that shows you everything before it deletes anything |
+| [Screenshots](https://github.com/ciro-maciel/screenshots) | Capture, annotate and record the screen, with nothing leaving your Mac |
+| [Speech to Text](https://github.com/ciro-maciel/speech-to-text) | Dictation by shortcut, with Whisper running on your Mac |
+| [Assistant](https://github.com/ciro-maciel/voice-assistant) | Claude Code by voice: say its name, ask, hear the answer |
+| [Windows](https://github.com/ciro-maciel/windows) | Snap windows into place with a shortcut or by dragging them to the edge |
+| [Text to Speech](https://github.com/ciro-maciel/text-to-speech) | Select text in any app and hear it read aloud · **this one** |
+
+Beyond the apps: [free tools for the browser](https://ciromaciel.click/tools?ref=oss-text-to-speech), [books](https://ciromaciel.click/books?ref=oss-text-to-speech), and [Infrastructure](https://myinfrastructure.click/?ref=oss-text-to-speech), the infrastructure AI agents already know how to run.
+
+**Follow along.** [Follow @ciro-maciel](https://github.com/ciro-maciel) for the next open-source apps, click **Watch → Custom → Releases** above for every new version, and see how it is all made on [YouTube](https://www.youtube.com/@ciro-maciel) and at [ciromaciel.click](https://ciromaciel.click/?ref=oss-text-to-speech).

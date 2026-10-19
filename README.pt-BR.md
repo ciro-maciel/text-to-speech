@@ -2,6 +2,8 @@
 
 **Selecione um texto em qualquer app do Mac, aperte um atalho e ouça o texto lido em voz alta.**
 
+Um dos [seis apps de Mac grátis e de código aberto](#mais-de-ciro-cesar-maciel) de [Ciro Cesar Maciel](https://ciromaciel.click/?ref=oss-text-to-speech).
+
 Duas vozes: o Rafael, uma voz natural em português do Brasil do [Fish Audio](https://fish.audio), pela internet; ou o [Piper](https://github.com/rhasspy/piper), que roda no seu Mac sem rede nenhuma. Um player pequeno flutua na tela, mostra a palavra que está sendo dita e some quando a leitura acaba. Sem conta, sem telemetria. Um app da barra de menus feito com Tauri e Rust.
 
 [English](README.md)
@@ -94,6 +96,21 @@ Issues e pull requests são bem-vindos. Veja o [CONTRIBUTING.md](CONTRIBUTING.md
 
 ---
 
-Feito por [Ciro Cesar Maciel](https://ciromaciel.click/?ref=oss-text-to-speech). Eu construo ferramentas e mostro como usar: mais [ferramentas grátis](https://ciromaciel.click/tools?ref=oss-text-to-speech) e [a página do Text to Speech](https://ciromaciel.click/tools/text-to-speech?ref=oss-text-to-speech), onde a mesma voz lê qualquer texto no navegador.
+## Mais de Ciro Cesar Maciel
 
-**Quer o próximo?** [Siga @ciro-maciel](https://github.com/ciro-maciel) para as próximas ferramentas abertas, e clique em **Watch → Custom → Releases** aqui em cima para saber de cada versão nova.
+Eu construo software sozinho, com uma equipe de agentes de IA, e abro o que dá para abrir. São seis apps nativos para Mac, todos grátis, MIT, assinados e notarizados pela Apple, em inglês e português do Brasil:
+
+| App | O que faz |
+| --- | --- |
+| [Cleaner](https://github.com/ciro-maciel/cleaner) | O limpador de Mac que mostra tudo antes de apagar qualquer coisa |
+| [Screenshots](https://github.com/ciro-maciel/screenshots) | Captura, anotação e gravação de tela, sem nada sair do Mac |
+| [Speech to Text](https://github.com/ciro-maciel/speech-to-text) | Ditado por atalho, com o Whisper rodando no Mac |
+| [Assistant](https://github.com/ciro-maciel/voice-assistant) | O Claude Code por voz: chame pelo nome, peça, ouça a resposta |
+| [Windows](https://github.com/ciro-maciel/windows) | Janelas no lugar com um atalho ou levando até a borda |
+| [Text to Speech](https://github.com/ciro-maciel/text-to-speech) | Selecione um texto em qualquer app e ouça · **este** |
+
+Além dos apps: [ferramentas grátis no navegador](https://ciromaciel.click/tools?ref=oss-text-to-speech), [livros](https://ciromaciel.click/books?ref=oss-text-to-speech) e o [Infrastructure](https://myinfrastructure.click/?ref=oss-text-to-speech), a infraestrutura que os agentes já sabem operar.
+
+**Toda semana, por e-mail:** as [Cartas do Ciro](https://ciromaciel.click/?ref=oss-text-to-speech), o que estou construindo e aprendendo.
+
+**Acompanhe.** [Siga @ciro-maciel](https://github.com/ciro-maciel) para os próximos apps abertos, clique em **Watch → Custom → Releases** aqui em cima para saber de cada versão nova, e veja como tudo é feito no [YouTube](https://www.youtube.com/@ciro-maciel).
