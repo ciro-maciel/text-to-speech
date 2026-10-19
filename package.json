@@ -1,6 +1,6 @@
 {
     "name": "text-to-speech",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "private": true,
     "description": "Reads aloud the text selected in any Mac app, with one shortcut. A natural Brazilian Portuguese voice over the internet, or Piper, offline on your Mac.",
     "homepage": "https://ciromaciel.click/tools/text-to-speech",
