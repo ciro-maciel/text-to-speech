@@ -57,7 +57,15 @@ codesign --verify --deep --strict "$APP" || fail "the app signature does not ver
 SIGNATURE="$(codesign -dvv "$APP" 2>&1)"
 grep -q "Authority=Developer ID Application" <<<"$SIGNATURE" || fail "the app is not signed with Developer ID"
 grep -q "flags=.*runtime" <<<"$SIGNATURE" || fail "the app has no hardened runtime"
-xcrun stapler validate "$APP" >/dev/null || fail "the app has no stapled ticket"
+# Tauri staples right after Apple accepts, and the ticket can take a minute to be served:
+# on 19/10/2026 the 0.4.0 release stopped here with the notarization accepted. Staple again
+# before giving up.
+for try in 1 2 3 4 5; do
+    xcrun stapler validate "$APP" >/dev/null 2>&1 && break
+    [ "$try" = 5 ] && fail "the app has no stapled ticket"
+    sleep 30
+    xcrun stapler staple "$APP" || true
+done
 
 mkdir -p "$OUT"
 DMG="$OUT/$NAME-$VERSION-macos.dmg"
