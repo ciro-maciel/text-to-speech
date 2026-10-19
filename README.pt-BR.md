@@ -4,6 +4,8 @@
 
 Um dos [seis apps de Mac grátis e de código aberto](#mais-de-ciro-cesar-maciel) de [Ciro Cesar Maciel](https://ciromaciel.click/?ref=oss-text-to-speech).
 
+**[Veja o vídeo de 1 minuto](https://youtu.be/EqDHxP9jKp4)** (em inglês)
+
 Duas vozes: o Rafael, uma voz natural em português do Brasil do [Fish Audio](https://fish.audio), pela internet; ou o [Piper](https://github.com/rhasspy/piper), que roda no seu Mac sem rede nenhuma. Um player pequeno flutua na tela, mostra a palavra que está sendo dita e some quando a leitura acaba. Sem conta, sem telemetria. Um app da barra de menus feito com Tauri e Rust.
 
 [English](README.md)
