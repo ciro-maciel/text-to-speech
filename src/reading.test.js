@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test'
-import { START_RAMP, FIRST_PART_MAX, PARAGRAPH_MAX, RAMP, splitForReading, splitIntoParagraphs, splitIntoParts, wordTimes, wordsSpoken, clock } from './reading.js'
+import { unwrapLines, START_RAMP, FIRST_PART_MAX, PARAGRAPH_MAX, RAMP, splitForReading, splitIntoParagraphs, splitIntoParts, wordTimes, wordsSpoken, clock } from './reading.js'
 
 const SAMPLE = `Em muitas situações, uma comunicação respeitosa e objetiva é suficiente.
 "Agradeço o convite, mas não poderei participar."
@@ -131,4 +131,28 @@ test('a long first sentence is cut at a clause mark between the 5th and the 12th
     const parts = splitForReading('Quando a gente explica demais, a decisão parece pedir licença a quem ouve e a quem não ouve.')
     expect(parts[0]).toBe('Quando a gente explica demais,')
     expect(parts[1]).toBe('a decisão parece pedir licença a quem ouve e a quem não ouve.')
+})
+
+const WRAPPED = `Quando um texto vem de um PDF, as linhas se quebram no
+meio das frases, e quem
+lê em voz alta não pode parar ali. A voz precisa
+entender que
+“
+a frase continua na linha de baixo, até o ponto final.”
+Capítulo 2
+Um título curto fica na sua linha.`
+
+test('lines broken in the middle of a sentence, as in a PDF, are joined; a sentence end or a title keeps its line', () => {
+    expect(unwrapLines(WRAPPED).split('\n')).toEqual([
+        'Quando um texto vem de um PDF, as linhas se quebram no meio das frases, e quem lê em voz alta não pode parar ali. A voz precisa entender que “ a frase continua na linha de baixo, até o ponto final.”',
+        'Capítulo 2',
+        'Um título curto fica na sua linha.',
+    ])
+    expect(unwrapLines('Primeiro parágrafo.\nSegundo parágrafo.')).toBe('Primeiro parágrafo.\nSegundo parágrafo.')
+})
+
+test('the reading of a PDF text never pauses in the middle of a sentence', () => {
+    const parts = splitForReading(WRAPPED)
+    expect(parts.join('\n')).not.toMatch(/quebram no\n|e quem\n|entender que\n/)
+    expect(parts.join(' ').split(/\s+/)).toEqual(WRAPPED.split(/\s+/))
 })

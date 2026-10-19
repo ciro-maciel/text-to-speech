@@ -165,10 +165,39 @@ function firstClause(words) {
     return FIRST_PART_MAX
 }
 
+/**
+ * A text copied from a PDF or a book breaks its lines in the middle of the
+ * sentences ("people who receive the / favor often / feel used."); cut at
+ * paragraphs, each of those lines was read as one, with a pause in the middle
+ * of the sentence (19/10/2026). A line joins the next one unless it ends a
+ * sentence (. ! ? … : ; maybe followed by a quote or a parenthesis), or it is
+ * a short line, like a title, followed by one that starts with a capital.
+ */
+const LINE_ENDS_SENTENCE = /[.!?…:;]["'”’»)\]]*$/
+const STARTS_UPPER = /^["'“‘«(\[—–-]*[A-ZÀ-ÖØ-Þ0-9]/
+
+export function unwrapLines(text) {
+    const lines = String(text).split('\n').map(l => l.trim())
+    let out = ''
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i]
+        if (!line) {
+            if (out && !out.endsWith('\n')) out += '\n'
+            continue
+        }
+        out += line
+        const next = lines[i + 1]
+        if (next === undefined) break
+        const isTitle = line.split(/\s+/).length <= 6 && STARTS_UPPER.test(next) && !/[,\-–—]$/.test(line)
+        out += !next || LINE_ENDS_SENTENCE.test(line) || isTitle ? '\n' : ' '
+    }
+    return out.replace(/\n+/g, '\n').trim()
+}
+
 export function splitForReading(text, max = PARAGRAPH_MAX) {
     // Every sentence of the text, and whether it ends its paragraph.
     const sentences = []
-    for (const paragraph of String(text).split(/\n+/).map(p => p.trim()).filter(Boolean)) {
+    for (const paragraph of unwrapLines(text).split(/\n+/).map(p => p.trim()).filter(Boolean)) {
         const own = paragraph.split(/(?<=[.!?…])\s+/).map(x => x.split(/\s+/).filter(Boolean)).filter(w => w.length)
         own.forEach((words, i) => sentences.push({ words, ends: i === own.length - 1 }))
     }
