@@ -6,7 +6,7 @@ Duas vozes: o Rafael, uma voz natural em português do Brasil do [Fish Audio](ht
 
 [English](README.md)
 
-![Text to Speech: a janela de ajustes, na tela Voz, com o Rafael, o Piper e a velocidade](docs/overview.webp)
+![Text to Speech: a janela de ajustes, na tela Voz, com o Rafael, o Piper e a velocidade](docs/overview.pt-BR.webp)
 
 ## Instalar
 
@@ -81,7 +81,7 @@ Um build local é assinado ad hoc, então o macOS pede a Acessibilidade de novo 
 ## Limites
 
 - Publicado para macOS 11 ou mais novo, só em Apple Silicon. O código é Tauri e o lado em Rust compila em outros sistemas, mas ler a seleção está escrito só para o macOS.
-- As vozes são em português do Brasil, e a interface está em português por enquanto.
+- As duas vozes falam português do Brasil: texto em outra língua sai com sotaque. A interface é em inglês e em português do Brasil, seguindo o idioma do Mac.
 - A voz pela internet depende do servidor público e do Fish Audio; quando um deles está ocupado, uma parte pode falhar. O Piper sempre funciona sem rede.
 
 ## Contribuir

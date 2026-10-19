@@ -25,13 +25,13 @@ fn simulate_copy() -> Result<()> {
 }
 
 pub fn read_current_selection() -> Result<String> {
-    let mut clipboard = Clipboard::new().map_err(|e| anyhow!("clipboard init failed: {e}"))?;
+    let mut clipboard = Clipboard::new().map_err(|e| anyhow!("{}: {e}", crate::i18n::t(crate::i18n::Text::ClipboardFailed)))?;
 
     let previous = clipboard.get_text().ok();
     let sentinel = format!("__tts_sentinel_{}", random_token());
     clipboard
         .set_text(&sentinel)
-        .map_err(|e| anyhow!("clipboard write failed: {e}"))?;
+        .map_err(|e| anyhow!("{}: {e}", crate::i18n::t(crate::i18n::Text::ClipboardFailed)))?;
 
     simulate_copy()?;
 

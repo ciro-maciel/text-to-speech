@@ -1,6 +1,9 @@
+import { applyTranslations, formatSpeed, initLanguage, t } from './i18n.js'
+
 const { invoke } = window.__TAURI__.core
 
 const DEFAULT_SHORTCUT = 'CmdOrCtrl+Shift+KeyS'
+// Both voices speak Brazilian Portuguese, so the sample stays in Portuguese in every language.
 const TEST_TEXT = 'Olá, esta é uma demonstração da minha voz.'
 
 const state = {
@@ -14,13 +17,10 @@ const state = {
 
 const el = id => document.getElementById(id)
 
-const POSITION_NAME = {
-    'top-left': 'Superior esquerdo', 'top-center': 'Superior centro', 'top-right': 'Superior direito',
-    'middle-left': 'Centro esquerdo', center: 'Centro', 'middle-right': 'Centro direito',
-    'bottom-left': 'Inferior esquerdo', 'bottom-center': 'Inferior centro', 'bottom-right': 'Inferior direito',
-}
-const SIZE_NAME = { compact: 'Compacto · 320 × 200', standard: 'Padrão · 380 × 240', spacious: 'Espaçoso · 460 × 280' }
-const speedLabel = v => `${Number(v).toFixed(2).replace('.', ',')}×`
+const positionName = pos => t(`pos.${pos}`) || pos
+const SIZE_DIMS = { compact: '320 × 200', standard: '380 × 240', spacious: '460 × 280' }
+const sizeName = size => t(`size.${size}`) || size
+const speedLabel = v => formatSpeed(v)
 
 /* The sidebar's status line (15-app-mac.md): Accessibility is what lets the app
    copy the selection. Off, it turns red, and a click goes straight to the list
@@ -34,8 +34,8 @@ async function renderAccessibility() {
     line.hidden = !isMac()
     line.classList.toggle('off', !on)
     line.querySelector('use').setAttribute('href', `icons.svg#${on ? 'check' : 'lock'}`)
-    line.querySelector('span').textContent = on ? 'Acessibilidade ligada' : 'Acessibilidade desligada'
-    line.title = on ? '' : 'Abrir a Acessibilidade nos Ajustes do Sistema'
+    line.querySelector('span').textContent = on ? t('accessibilityOn') : t('accessibilityOff')
+    line.title = on ? '' : t('accessibilityOpen')
 }
 function watchAccessibility() {
     renderAccessibility()
@@ -49,7 +49,7 @@ function watchAccessibility() {
 async function showVersion() {
     try {
         const version = await window.__TAURI__.app.getVersion()
-        el('version').textContent = `Versão ${version} · por Ciro Cesar Maciel`
+        el('version').textContent = t('version', { version })
     } catch {}
 }
 
@@ -133,7 +133,7 @@ function populatePiperVoices() {
     for (const v of state.piperVoices) {
         const opt = document.createElement('option')
         opt.value = v.id
-        opt.textContent = v.ready ? v.label : `${v.label} (não baixada)`
+        opt.textContent = v.ready ? v.label : t('notDownloaded', { label: v.label })
         sel.appendChild(opt)
     }
     if (state.config?.piper_voice) sel.value = state.config.piper_voice
@@ -164,15 +164,15 @@ function updatePiperStatus() {
         return
     }
     if (state.downloading) {
-        status.textContent = `Baixando ${meta.size_mb} MB…`
+        status.textContent = t('downloading', { size: meta.size_mb })
         dl.hidden = true
         return
     }
     if (meta.ready) {
-        status.textContent = `Neste computador · ${meta.size_mb} MB`
+        status.textContent = t('onThisComputer', { size: meta.size_mb })
         dl.hidden = true
     } else {
-        status.textContent = `Ainda não baixada · ${meta.size_mb} MB`
+        status.textContent = t('notDownloadedYet', { size: meta.size_mb })
         dl.hidden = false
     }
 }
@@ -184,7 +184,7 @@ function reflectPosition() {
         b.setAttribute('aria-pressed', String(b.dataset.pos === pos))
     })
     const lbl = el('position-label')
-    if (lbl) lbl.textContent = POSITION_NAME[pos] || ''
+    if (lbl) lbl.textContent = positionName(pos)
 }
 
 /* ─── Size picker ──────────────────────────────────────────────────── */
@@ -194,7 +194,7 @@ function reflectSize() {
         c.setAttribute('aria-pressed', String(c.dataset.size === size))
     })
     const lbl = el('size-label')
-    if (lbl) lbl.textContent = SIZE_NAME[size] || ''
+    if (lbl) lbl.textContent = SIZE_DIMS[size] ? `${sizeName(size)} · ${SIZE_DIMS[size]}` : ''
 }
 
 /* ─── Reflect all config ───────────────────────────────────────────── */
@@ -215,7 +215,7 @@ function startRecording() {
     const input = el('speak-input')
     input.classList.add('recording')
     input.classList.remove('error')
-    input.value = 'Aperte a combinação…'
+    input.value = t('pressCombination')
 }
 
 function stopRecording() {
@@ -229,7 +229,7 @@ async function saveShortcut(combo) {
     try {
         state.config = await invoke('set_speak_shortcut', { speakShortcut: combo })
         reflectConfig()
-        setStatus('Atalho salvo', 'ok')
+        setStatus(t('shortcutSaved'), 'ok')
     } catch (err) {
         const input = el('speak-input')
         input.classList.add('error')
@@ -243,7 +243,7 @@ async function saveEngine(engine) {
     try {
         state.config = await invoke('set_engine', { engine })
         reflectEngineCards()
-        setStatus(`Motor: ${engine === 'piper' ? 'Piper' : 'Rafael'}`, 'ok')
+        setStatus(t('engineSaved', { engine: engine === 'piper' ? 'Piper' : 'Rafael' }), 'ok')
     } catch (err) {
         setStatus(String(err), 'err')
     }
@@ -253,7 +253,7 @@ async function savePiperVoice(voice) {
     try {
         state.config = await invoke('set_piper_voice', { piperVoice: voice })
         updatePiperStatus()
-        setStatus('Voz salva', 'ok')
+        setStatus(t('voiceSaved'), 'ok')
     } catch (err) {
         setStatus(String(err), 'err')
     }
@@ -271,7 +271,7 @@ async function savePosition(position) {
     try {
         state.config = await invoke('set_player_position', { playerPosition: position })
         reflectPosition()
-        setStatus(`Posição: ${(POSITION_NAME[position] || position).toLowerCase()}`, 'ok')
+        setStatus(t('positionSaved', { position: positionName(position).toLowerCase() }), 'ok')
     } catch (err) {
         setStatus(String(err), 'err')
     }
@@ -281,7 +281,7 @@ async function saveSize(size) {
     try {
         state.config = await invoke('set_player_size', { playerSize: size })
         reflectSize()
-        setStatus(`Tamanho: ${(SIZE_NAME[size] || size).split(' ·')[0].toLowerCase()}`, 'ok')
+        setStatus(t('sizeSaved', { size: sizeName(size).toLowerCase() }), 'ok')
     } catch (err) {
         setStatus(String(err), 'err')
     }
@@ -304,9 +304,9 @@ async function downloadPiper() {
     updatePiperStatus()
     try {
         await invoke('download_piper_voice', { voiceId: meta.id })
-        setStatus('Voz baixada', 'ok')
+        setStatus(t('voiceDownloaded'), 'ok')
     } catch (err) {
-        setStatus(`Erro: ${err}`, 'err')
+        setStatus(t('error', { error: err }), 'err')
     } finally {
         state.downloading = false
         await refreshPiperVoices()
@@ -332,7 +332,7 @@ function stopTest() {
 function setTestButtonPlaying(playing) {
     const lbl = el('test-label')
     const icon = el('test-icon')
-    if (lbl) lbl.textContent = playing ? 'Parar' : 'Ouvir a voz'
+    if (lbl) lbl.textContent = playing ? t('stopTest') : t('testVoice')
     if (icon) icon.setAttribute('href', `icons.svg#${playing ? 'player-stop' : 'player-play'}`)
 }
 
@@ -396,9 +396,9 @@ async function toggleAutoLaunch() {
     try {
         const isOn = await invoke('set_auto_launch', { enabled: next })
         el('auto-launch').setAttribute('aria-checked', String(isOn))
-        setStatus(isOn ? 'Abre ao iniciar o Mac' : 'Não abre mais ao iniciar o Mac', 'ok')
+        setStatus(isOn ? t('opensAtLogin') : t('noLongerOpensAtLogin'), 'ok')
     } catch (err) {
-        setStatus(`Erro: ${err}`, 'err')
+        setStatus(t('error', { error: err }), 'err')
     }
 }
 
@@ -409,7 +409,7 @@ async function load() {
         await refreshPiperVoices()
         reflectConfig()
     } catch (err) {
-        setStatus(`Erro: ${err}`, 'err')
+        setStatus(t('error', { error: err }), 'err')
     }
 }
 
@@ -458,11 +458,16 @@ function bind() {
     window.addEventListener('blur', stopRecording)
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+    await initLanguage(invoke)
+    applyTranslations()
+    el('speed-hint').textContent = t('speedHint', { speed: formatSpeed(1) })
+    setTestButtonPlaying(false)
     bind()
     let saved = null
     try { saved = localStorage.getItem('tts.activeTab') } catch {}
     if (saved) activateTab(saved)
+    invoke('startup_tab').then(tab => { if (tab) activateTab(tab) }).catch(() => {})
     showVersion()
     watchAccessibility()
     el('status-line').addEventListener('click', () => {

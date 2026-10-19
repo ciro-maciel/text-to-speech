@@ -1,4 +1,5 @@
 import { clock, splitForReading, wordTimes, wordsSpoken } from './reading.js'
+import { applyTranslations, formatSpeed, initLanguage, t } from './i18n.js'
 
 const { invoke } = window.__TAURI__.core
 const { listen } = window.__TAURI__.event
@@ -46,7 +47,7 @@ const SECONDS_PER_CHAR = 0.057
 
 const el = id => document.getElementById(id)
 
-/** A message in place of the clock and the voice (an error, "Nada selecionado"). */
+/** A message in place of the clock and the voice (an error, "Nothing selected"). */
 function setHint(text, withEsc = false) {
     const h = el('hint')
     if (!h) return
@@ -72,12 +73,12 @@ function voiceShortName(cfg) {
     return capitalize(parts[1] || cfg.piper_voice || '')
 }
 
-const speedLabel = speed => `${Number(speed || 1).toFixed(2).replace('.', ',')}×`
+const speedLabel = speed => formatSpeed(speed)
 
 function reflectChips() {
     const cfg = state.config
     const engineEl = el('chip-engine')
-    if (engineEl) engineEl.textContent = cfg.engine === 'piper' ? 'Piper' : 'Internet'
+    if (engineEl) engineEl.textContent = cfg.engine === 'piper' ? 'Piper' : t('engineInternet')
     const voiceEl = el('chip-voice')
     if (voiceEl) voiceEl.textContent = voiceShortName(cfg)
     const speedEl = el('chip-speed')
@@ -315,7 +316,7 @@ async function readAll(r) {
         const played = await playPart(item)
         if (!isLive(r)) return false
         if (!played) {
-            setHint('Não foi possível tocar este trecho. Tente de novo.')
+            setHint(t('partFailed'))
             return false
         }
         if (r.jumped) continue
@@ -401,9 +402,9 @@ function render() {
 
     const audio = state.audioElement
     const playing = Boolean(audio && part.item && !audio.paused)
-    el('state').textContent = r.paused ? 'Pausado' : (part.item ? 'Lendo' : 'Preparando')
+    el('state').textContent = r.paused ? t('paused') : (part.item ? t('reading') : t('preparing'))
     document.body.classList.toggle('is-paused', r.paused)
-    el('progress').textContent = r.parts.length > 1 ? `trecho ${r.index + 1} de ${r.parts.length}` : ''
+    el('progress').textContent = r.parts.length > 1 ? t('partOf', { n: r.index + 1, total: r.parts.length }) : ''
 
     // The words already spoken light up.
     const at = audio && part.item ? audio.currentTime : 0
@@ -428,7 +429,7 @@ function render() {
     })
     const elapsed = before + (part.item && audio ? audio.currentTime * part.item.speed / state.config.speed : 0)
     el('bar').style.width = `${total ? Math.min(100, (elapsed / total) * 100) : 0}%`
-    el('clock').textContent = `${clock(elapsed)} de ${clock(total)}`
+    el('clock').textContent = t('clockOf', { elapsed: clock(elapsed), total: clock(total) })
 
     // The meter beside the label follows the voice's loudness.
     let amp = 0
@@ -460,7 +461,7 @@ function clearWindow() {
         if (node) node.textContent = ''
     }
     el('bar').style.width = '0%'
-    el('state').textContent = 'Lendo'
+    el('state').textContent = t('reading')
     document.body.classList.remove('is-paused')
     setHint('')
 }
@@ -523,8 +524,10 @@ async function speakSelectionFlow() {
             // Without Accessibility macOS refuses the ⌘C; say so and open the app
             // window, whose status line takes the person to the switch.
             if (/accessibility/i.test(String(err))) {
-                setHint('Falta ligar a Acessibilidade para o Text to Speech')
+                setHint(t('needsAccessibility'))
                 try { await invoke('open_settings') } catch {}
+            } else if (/no text selected/i.test(String(err))) {
+                setHint(t('nothingSelected'))
             } else {
                 setHint(String(err))
             }
@@ -537,7 +540,7 @@ async function speakSelectionFlow() {
             if (!text?.trim() && state.sessionId === mySession) {
                 await applyPlayerLayout()
                 await showWindow()
-                setHint('Nada selecionado')
+                setHint(t('nothingSelected'))
                 setTimeout(() => {
                     if (state.sessionId === mySession) hideWindow()
                 }, 1800)
@@ -594,6 +597,9 @@ window.addEventListener('keydown', e => {
 }, true)
 
 window.addEventListener('DOMContentLoaded', async () => {
+    await initLanguage(invoke)
+    applyTranslations()
+    el('state').textContent = t('reading')
     await refreshConfig()
     reflectChips()
     listen('tts://speak-selection', async () => {

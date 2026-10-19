@@ -25,6 +25,7 @@ pub fn run(dir: &Path) -> i32 {
         }
     };
     let mut failed = 0;
+    println!("· interface language: {}", crate::i18n::lang().code());
 
     let server = crate::tts::server(None);
     match runtime.block_on(crate::tts::synthesize(&server, SENTENCE, 1.0)) {

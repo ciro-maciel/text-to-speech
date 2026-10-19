@@ -12,6 +12,7 @@ Text to Speech is a macOS menu bar app built with Tauri 2: Rust in `src-tauri/`,
 | `src-tauri/src/piper.rs` | The offline voice: download from Hugging Face, synthesis to WAV |
 | `src-tauri/src/config.rs`, `permissions.rs` | Settings (`config.json`), Accessibility |
 | `src-tauri/src/self_test.rs` | `--self-test <dir>`: both voices end to end, no window |
+| `src/i18n.js`, `src-tauri/src/i18n.rs` | The interface in English and Brazilian Portuguese, following the Mac's language (first preferred language `pt…` → Portuguese, anything else → English). Rust decides; the windows ask it (`ui_language`). Permission texts in `src-tauri/lproj/<lang>.lproj/InfoPlist.strings` |
 | `src/main.js`, `src/index.html` | The floating player: parts ahead, word highlight, keys |
 | `src/reading.js` | Pure logic: how a text becomes parts, word timing, the clock. Tested by `reading.test.js`; the web page at ciromaciel.click uses a copy of it |
 | `src/settings.*` | The settings window |
@@ -34,4 +35,7 @@ The Rust target is `/tmp/tts-target` (`src-tauri/.cargo/config.toml`), because e
 - Network calls: the configured voice server (text and speed only, Rafael only) and the Piper voice download. Nothing else, and no remote fonts or scripts in `src/`.
 - The bundle identifier `click.ciromaciel.text-to-speech` never changes: macOS ties Accessibility to it.
 - The version lives in `package.json`; bumping it on `main` is a release.
-- Bun, never npm. The interface text is in Portuguese; code, comments and file names are in English.
+- Bun, never npm. Code, comments and file names are in English.
+- Every user-facing string exists in English and Brazilian Portuguese (`src/i18n.js`, `src-tauri/src/i18n.rs`, `src-tauri/lproj/`); a change that adds text adds both. The voices speak Brazilian Portuguese in both languages: the spoken samples stay in Portuguese.
+
+To see the windows in each language, launch the built app with `--open-settings <tab>` (`shortcut`, `voice`, `player`, `system`) and `-AppleLanguages "(en)"` or `-AppleLanguages "(pt-BR)"`; with `HOME` pointed at an empty folder it leaves your settings alone.

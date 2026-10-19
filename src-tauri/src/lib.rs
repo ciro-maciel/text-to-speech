@@ -1,4 +1,5 @@
 mod config;
+mod i18n;
 mod permissions;
 mod piper;
 mod selection;
@@ -76,7 +77,7 @@ fn set_speak_shortcut(
     speak_shortcut: String,
 ) -> Result<config::Config, String> {
     let new_speak = parse_shortcut(&speak_shortcut)
-        .map_err(|e| format!("atalho inválido: {}", e))?;
+        .map_err(|e| format!("{}: {}", i18n::t(i18n::Text::InvalidShortcut), e))?;
 
     let mut cfg = state.config.lock().map_err(|e| e.to_string())?;
     let old = parse_shortcut(&cfg.speak_shortcut).ok();
@@ -90,7 +91,7 @@ fn set_speak_shortcut(
         if let Some(s) = old {
             let _ = gs.register(s);
         }
-        return Err(format!("não foi possível registrar: {}", e));
+        return Err(format!("{}: {}", i18n::t(i18n::Text::CannotRegisterShortcut), e));
     }
 
     cfg.speak_shortcut = speak_shortcut;
@@ -264,6 +265,26 @@ fn set_auto_launch(app: AppHandle, enabled: bool) -> Result<bool, String> {
     Ok(manager.is_enabled().unwrap_or(false))
 }
 
+/// The interface language, "en" or "pt-BR": the windows use the same one as the menu bar.
+#[tauri::command]
+fn ui_language() -> &'static str {
+    i18n::lang().code()
+}
+
+/// The tab named after `--open-settings`, if the app was launched with it.
+#[tauri::command]
+fn startup_tab() -> Option<String> {
+    open_settings_arg().flatten()
+}
+
+/// `--open-settings [tab]`: the settings window opens at launch, on that tab.
+/// Used to capture the window in each language (AGENTS.md).
+fn open_settings_arg() -> Option<Option<String>> {
+    let args: Vec<String> = std::env::args().collect();
+    let i = args.iter().position(|a| a == "--open-settings")?;
+    Some(args.get(i + 1).filter(|a| !a.starts_with('-')).cloned())
+}
+
 #[tauri::command]
 fn accessibility_granted() -> bool {
     permissions::accessibility_granted()
@@ -362,7 +383,9 @@ pub fn run() {
             get_auto_launch,
             set_auto_launch,
             arm_cancel_key,
-            disarm_cancel_key
+            disarm_cancel_key,
+            ui_language,
+            startup_tab
         ])
         .setup(|app| {
             #[cfg(target_os = "macos")]
@@ -390,17 +413,17 @@ pub fn run() {
             let speak_item = MenuItem::with_id(
                 app,
                 "speak",
-                "Ler seleção",
+                i18n::t(i18n::Text::MenuReadSelection),
                 true,
                 Some(cfg.speak_shortcut.as_str()),
             )?;
             let stop_item =
-                MenuItem::with_id(app, "stop", "Parar", true, None::<&str>)?;
+                MenuItem::with_id(app, "stop", i18n::t(i18n::Text::MenuStop), true, None::<&str>)?;
             let settings_item =
-                MenuItem::with_id(app, "settings", "Abrir o Text to Speech", true, Some("CmdOrCtrl+,"))?;
+                MenuItem::with_id(app, "settings", i18n::t(i18n::Text::MenuOpen), true, Some("CmdOrCtrl+,"))?;
             let sep1 = PredefinedMenuItem::separator(app)?;
             let sep2 = PredefinedMenuItem::separator(app)?;
-            let quit_item = MenuItem::with_id(app, "quit", "Sair", true, None::<&str>)?;
+            let quit_item = MenuItem::with_id(app, "quit", i18n::t(i18n::Text::MenuQuit), true, None::<&str>)?;
             let menu = Menu::with_items(
                 app,
                 &[&speak_item, &stop_item, &sep1, &settings_item, &sep2, &quit_item],
@@ -437,6 +460,13 @@ pub fn run() {
             let gs = app.global_shortcut();
             if let Ok(s) = parse_shortcut(&cfg.speak_shortcut) {
                 let _ = gs.register(s);
+            }
+
+            if open_settings_arg().is_some() {
+                if let Some(w) = app.get_webview_window("settings") {
+                    let _ = w.show();
+                    let _ = w.set_focus();
+                }
             }
 
             for label in ["main", "settings"] {

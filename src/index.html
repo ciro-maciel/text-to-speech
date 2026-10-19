@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="styles.css" />
@@ -10,7 +10,7 @@
   <body>
     <div class="player">
       <header class="player__head">
-        <span class="label"><span id="state">Lendo</span><span class="meter" id="meter" aria-hidden="true"><i></i><i></i><i></i><i></i></span></span>
+        <span class="label"><span id="state">Reading</span><span class="meter" id="meter" aria-hidden="true"><i></i><i></i><i></i><i></i></span></span>
         <span class="player__progress" id="progress"></span>
       </header>
 
@@ -24,8 +24,8 @@
 
       <footer class="player__foot">
         <span class="player__clock" id="clock"></span>
-        <span class="player__meta"><span id="chip-engine">Internet</span> · <span id="chip-voice">Rafael</span> · <span id="chip-speed">1,00×</span></span>
-        <span class="player__keys"><kbd class="kbd">Espaço</kbd> continuar <kbd class="kbd">←</kbd><kbd class="kbd">→</kbd> trecho</span>
+        <span class="player__meta"><span id="chip-engine">Internet</span> · <span id="chip-voice">Rafael</span> · <span id="chip-speed">1.00×</span></span>
+        <span class="player__keys"><kbd class="kbd" data-i18n="keySpace">Space</kbd> <span data-i18n="keyResume">resume</span> <kbd class="kbd">←</kbd><kbd class="kbd">→</kbd> <span data-i18n="keyPart">part</span></span>
         <span class="player__hint" id="hint"></span>
       </footer>
     </div>

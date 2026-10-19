@@ -81,7 +81,7 @@ A local build is signed ad hoc, so macOS asks for Accessibility again after each
 ## Limits
 
 - Published for macOS 11 or newer on Apple Silicon only. The code is Tauri and the Rust side compiles elsewhere, but reading the selection is written for macOS only.
-- The voices are Brazilian Portuguese, and the interface is in Portuguese for now.
+- Both voices speak Brazilian Portuguese: text in another language is read with a Portuguese accent. The interface is in English and Brazilian Portuguese, following the Mac's language.
 - The internet voice depends on the public server and on Fish Audio; when either is busy, a part can fail. Piper always works offline.
 
 ## Contributing

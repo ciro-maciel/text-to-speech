@@ -29,7 +29,8 @@ Then select some text in another app and press the shortcut. If your change touc
 - **The text goes only where the person chose.** With Piper it never leaves the Mac. With Rafael it goes to the configured server and nowhere else. A new network call needs a reason in the pull request and a line in the README's Privacy section.
 - No analytics, no account, no remote font or script: the windows load only what is in `src/`.
 - The clipboard is put back the way it was after the selection is read.
-- Code, comments and file names in English; the interface text is in Portuguese for now.
+- Code, comments and file names in English.
+- Every user-facing string exists in English and Brazilian Portuguese (`src/i18n.js`, `src-tauri/src/i18n.rs`, `src-tauri/lproj/`); a change that adds text adds both. The app follows the Mac's language; to check both, run the built app with `--open-settings voice -AppleLanguages "(en)"` and then `"(pt-BR)"`.
 - The bundle identifier (`click.ciromaciel.text-to-speech`) never changes: macOS ties Accessibility to it.
 
 ## Reporting a bug

@@ -1,3 +1,4 @@
+use crate::i18n::{t, Text};
 use anyhow::{anyhow, Result};
 use base64::Engine;
 use serde::{Deserialize, Serialize};
@@ -17,7 +18,6 @@ pub const DEFAULT_SERVER: &str = "https://manager.ciromaciel.click/text-to-speec
 // A sentence takes a few seconds; the server may also queue it behind other
 // people's parts and retry Fish, so the wait is generous.
 const TIMEOUT: Duration = Duration::from_secs(120);
-const FALLBACK_ERROR: &str = "A voz não respondeu agora. Tente de novo em alguns segundos.";
 
 /// A spoken word and when, in seconds of its part's audio.
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -51,25 +51,26 @@ pub async fn synthesize(server: &str, text: &str, speed: f32) -> Result<(Vec<u8>
         .json(&serde_json::json!({ "text": text, "speed": speed }))
         .send()
         .await
-        .map_err(|_| anyhow!("Sem conexão com a voz. Confira a internet ou use a Piper, que funciona sem rede."))?;
+        .map_err(|_| anyhow!(t(Text::VoiceNoConnection)))?;
 
     if !response.status().is_success() {
-        // The server writes its errors for people ({ "error": "…" }); anything else gets the generic one.
+        // The server writes its errors for people ({ "error": "…" }), in Brazilian Portuguese;
+        // anything else gets the generic one, in the app's language.
         let message = response
             .json::<serde_json::Value>()
             .await
             .ok()
             .and_then(|body| body.get("error").and_then(|e| e.as_str()).map(str::to_string))
-            .unwrap_or_else(|| FALLBACK_ERROR.to_string());
+            .unwrap_or_else(|| t(Text::VoiceNoAnswer).to_string());
         return Err(anyhow!(message));
     }
 
-    let timed: Timed = response.json().await.map_err(|_| anyhow!(FALLBACK_ERROR))?;
+    let timed: Timed = response.json().await.map_err(|_| anyhow!(t(Text::VoiceNoAnswer)))?;
     let audio = base64::engine::general_purpose::STANDARD
         .decode(timed.audio)
-        .map_err(|_| anyhow!(FALLBACK_ERROR))?;
+        .map_err(|_| anyhow!(t(Text::VoiceNoAnswer)))?;
     if audio.is_empty() {
-        return Err(anyhow!(FALLBACK_ERROR));
+        return Err(anyhow!(t(Text::VoiceNoAnswer)));
     }
     Ok((audio, timed.words))
 }

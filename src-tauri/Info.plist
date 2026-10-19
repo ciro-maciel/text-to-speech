@@ -2,9 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>pt-BR</string>
+    </array>
     <key>NSAppleEventsUsageDescription</key>
-    <string>O Text to Speech envia ⌘C ao app em uso para copiar o texto selecionado e lê-lo em voz alta.</string>
+    <string>Text to Speech sends ⌘C to the app you're using to copy the selected text and read it aloud.</string>
     <key>NSAccessibilityUsageDescription</key>
-    <string>O Text to Speech precisa da Acessibilidade para copiar o texto selecionado em qualquer app.</string>
+    <string>Text to Speech needs Accessibility to copy the selected text in any app.</string>
 </dict>
 </plist>

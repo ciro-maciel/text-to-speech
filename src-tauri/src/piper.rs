@@ -1,3 +1,4 @@
+use crate::i18n::{t, Text};
 use anyhow::{anyhow, Result};
 use piper_rs::Piper;
 use serde::Serialize;
@@ -43,7 +44,7 @@ pub fn voice_is_ready(app_data_dir: &Path, id: &str) -> bool {
 
 pub async fn download_voice(app_data_dir: &Path, id: &str) -> Result<()> {
     let meta =
-        voice_meta(id).ok_or_else(|| anyhow!("voz desconhecida: {id}"))?;
+        voice_meta(id).ok_or_else(|| anyhow!("{}: {id}", t(Text::UnknownVoice)))?;
     let dir = voices_dir(app_data_dir);
     std::fs::create_dir_all(&dir)?;
     let (onnx_path, config_path) = voice_paths(app_data_dir, id);
@@ -75,15 +76,15 @@ pub fn synthesize_wav(
 ) -> Result<Vec<u8>> {
     let (onnx_path, config_path) = voice_paths(app_data_dir, voice_id);
     if !onnx_path.exists() || !config_path.exists() {
-        return Err(anyhow!("voz '{voice_id}' não está baixada"));
+        return Err(anyhow!(t(Text::VoiceNotDownloaded).replace("{voice}", voice_id)));
     }
 
     let mut piper = Piper::new(&onnx_path, &config_path)
-        .map_err(|e| anyhow!("falha ao carregar modelo: {e}"))?;
+        .map_err(|e| anyhow!("{}: {e}", t(Text::ModelLoadFailed)))?;
 
     let (samples, sample_rate) = piper
         .create(text, false, None, Some(length_scale), None, None)
-        .map_err(|e| anyhow!("falha na síntese: {e}"))?;
+        .map_err(|e| anyhow!("{}: {e}", t(Text::SynthesisFailed)))?;
 
     let samples_i16: Vec<i16> = samples
         .iter()
