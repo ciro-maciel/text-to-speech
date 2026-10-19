@@ -1,0 +1,68 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Text to Speech",
+  "version": "../package.json",
+  "identifier": "click.ciromaciel.text-to-speech",
+  "build": {
+    "frontendDist": "../src"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "url": "index.html",
+        "title": "Text to Speech",
+        "width": 380,
+        "height": 240,
+        "visible": false,
+        "decorations": false,
+        "transparent": true,
+        "resizable": false,
+        "skipTaskbar": true,
+        "alwaysOnTop": true,
+        "shadow": false,
+        "focus": false,
+        "center": true
+      },
+      {
+        "label": "settings",
+        "url": "settings.html",
+        "title": "Text to Speech",
+        "width": 1040,
+        "height": 720,
+        "minWidth": 960,
+        "minHeight": 640,
+        "visible": false,
+        "decorations": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "theme": "Light",
+        "resizable": true,
+        "skipTaskbar": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "app",
+      "dmg"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "macOS": {
+      "minimumSystemVersion": "11.0",
+      "entitlements": "../entitlements.mac.plist"
+    }
+  }
+}

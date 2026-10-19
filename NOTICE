@@ -1,0 +1,39 @@
+Text to Speech
+Copyright (c) 2025-2026 Ciro Cesar Maciel. Licensed under the MIT License (LICENSE).
+
+The app bundles or downloads third-party material under its own license:
+
+- piper-rs (Piper in Rust), by thewh1teagle. MIT License.
+  https://github.com/thewh1teagle/piper-rs
+
+- espeak-ng (phonemes for Piper, compiled from source through espeak-rs), by the
+  eSpeak NG contributors. GNU General Public License v3.0 or later.
+  https://github.com/espeak-ng/espeak-ng
+  espeak-ng is linked into the app, so the app as built and distributed is also covered
+  by the GPL v3: its complete source is this repository plus the packages pinned in
+  src-tauri/Cargo.lock. The code in this repository stays under the MIT License.
+
+- ONNX Runtime (runs the Piper voice, through the ort crate), by Microsoft.
+  MIT License. https://github.com/microsoft/onnxruntime
+
+- The Piper voice pt_BR-faber-medium, downloaded on demand from Hugging Face
+  (rhasspy/piper-voices). Its license is in its model card.
+  https://huggingface.co/rhasspy/piper-voices
+
+- Montserrat (src/fonts), by the Montserrat Project Authors.
+  SIL Open Font License 1.1: src/fonts/OFL.txt. https://github.com/JulietaUla/Montserrat
+
+- Tabler Icons (src/icons.svg), by Pawel Kuna.
+  MIT License. https://github.com/tabler/tabler-icons
+
+- The app icon and the menu bar glyph (src-tauri/icons) are the letter T set in Candal,
+  by Vernon Adams. SIL Open Font License 1.1. https://fonts.google.com/specimen/Candal
+
+- Tauri and the Rust and JavaScript packages listed in src-tauri/Cargo.lock and bun.lock,
+  each under its own license (MIT or Apache-2.0 for Tauri).
+
+The Rafael voice is made by Fish Audio (https://fish.audio) on the Text to Speech server;
+no part of it is in this repository or in the app.
+
+The name "Text to Speech by Ciro Cesar Maciel" and the app icon identify the maker's
+official build. A fork that ships its own build should use its own name and icon.

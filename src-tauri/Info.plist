@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>O Text to Speech envia ⌘C ao app em uso para copiar o texto selecionado e lê-lo em voz alta.</string>
+    <key>NSAccessibilityUsageDescription</key>
+    <string>O Text to Speech precisa da Acessibilidade para copiar o texto selecionado em qualquer app.</string>
+</dict>
+</plist>
