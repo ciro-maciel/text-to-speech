@@ -20,6 +20,8 @@ curl -fsSL https://blob.ciromaciel.click/tools/text-to-speech/install.sh | bash
 
 The script downloads the latest `.dmg`, copies Text to Speech to `/Applications` and opens it.
 
+With [Homebrew](https://github.com/ciro-maciel/homebrew-tap): `brew install --cask ciro-maciel/tap/ciro-text-to-speech`.
+
 Prefer the disk image? [Download Text-to-Speech-macos.dmg](https://blob.ciromaciel.click/tools/text-to-speech/latest/Text-to-Speech-macos.dmg). Open it and drag Text to Speech to Applications. It is signed with Developer ID and notarized by Apple, so macOS opens it with no warning.
 
 The app asks for one permission, **Accessibility**: reading the selection sends Cmd + C to the app in front, and macOS only allows that to a trusted app.
