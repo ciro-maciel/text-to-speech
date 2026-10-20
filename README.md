@@ -6,6 +6,8 @@ One of [six free, open-source Mac apps](#more-from-ciro-cesar-maciel) by [Ciro C
 
 **[Watch the 1-minute video](https://youtu.be/EqDHxP9jKp4)**
 
+[![As seen on Open Source Alternatives](https://www.opensourcealternatives.to/badge-osa.svg)](https://www.opensourcealternatives.to)
+
 Two voices: Rafael, a natural Brazilian Portuguese voice from [Fish Audio](https://fish.audio), over the internet; or [Piper](https://github.com/rhasspy/piper), which runs on your Mac with no network at all. A small floating player shows the word being spoken and goes away when the reading ends. No account, no telemetry. A menu bar app built with Tauri and Rust.
 
 [Português](README.pt-BR.md)
