@@ -6,7 +6,7 @@ Um dos [seis apps de Mac grátis e de código aberto](#mais-de-ciro-cesar-maciel
 
 **[Veja o vídeo de 1 minuto](https://youtu.be/EqDHxP9jKp4)** (em inglês)
 
-[![As seen on Open Source Alternatives](https://www.opensourcealternatives.to/badge-osa.svg)](https://www.opensourcealternatives.to)
+[![As seen on Open Source Alternatives](https://www.opensourcealternatives.to/badge-osa.svg)](https://www.opensourcealternatives.to) [![Text to Speech by Ciro Cesar Maciel | AlternativeTo](https://alternativeto.net/static/badges/badge-compact-color.svg)](https://alternativeto.net/software/text-to-speech-by-ciro-cesar-maciel/about/?utm_source=badge&utm_medium=referral)
 
 Duas vozes: o Rafael, uma voz natural em português do Brasil do [Fish Audio](https://fish.audio), pela internet; ou o [Piper](https://github.com/rhasspy/piper), que roda no seu Mac sem rede nenhuma. Um player pequeno flutua na tela, mostra a palavra que está sendo dita e some quando a leitura acaba. Sem conta, sem telemetria. Um app da barra de menus feito com Tauri e Rust.
 
