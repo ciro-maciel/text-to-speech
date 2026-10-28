@@ -1,0 +1,2 @@
+/* Why macOS asks the person for each permission (Info.plist usage descriptions). */
+"NSAccessibilityUsageDescription" = "O Text to Speech precisa da Acessibilidade para copiar o texto selecionado em qualquer app.";

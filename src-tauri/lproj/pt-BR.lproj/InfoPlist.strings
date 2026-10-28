@@ -1,3 +1,0 @@
-/* Why macOS asks the person for each permission (Info.plist usage descriptions). */
-"NSAppleEventsUsageDescription" = "O Text to Speech envia ⌘C ao app em uso para copiar o texto selecionado e lê-lo em voz alta.";
-"NSAccessibilityUsageDescription" = "O Text to Speech precisa da Acessibilidade para copiar o texto selecionado em qualquer app.";

@@ -1,41 +1,39 @@
 # Notes for coding agents
 
-Text to Speech is a macOS menu bar app built with Tauri 2: Rust in `src-tauri/`, plain HTML, CSS and JavaScript in `src/` (no framework, no bundler). It reads the selection aloud with one of two engines: Rafael (an HTTP server that answers MP3, made by Fish Audio) or Piper (on device, ONNX Runtime and espeak-ng).
+Text to Speech is a native macOS menu bar app: AppKit and SwiftUI, one Swift package with no dependencies (`Package.swift`), wrapped into `dist/Text to Speech.app` by `scripts/build.sh`. It reads the selection aloud with Rafael, a Fish Audio voice, through the Text to Speech server. Versions 0.x were a Tauri app with an offline Piper voice too; the last one is commit `33bd6dd`.
 
 ## Layout
 
 | Path | What it is |
 | --- | --- |
-| `src-tauri/src/lib.rs` | App setup, Tauri commands, the menu bar and the global shortcut |
-| `src-tauri/src/selection.rs` | Reads the selection: Cmd + C through System Events, then puts the clipboard back |
-| `src-tauri/src/tts.rs` | The internet voice: `POST <server>/speak-timed`, configurable (`server_url`, `TEXT_TO_SPEECH_SERVER`) |
-| `src-tauri/src/piper.rs` | The offline voice: download from Hugging Face, synthesis to WAV |
-| `src-tauri/src/config.rs`, `permissions.rs` | Settings (`config.json`), Accessibility |
-| `src-tauri/src/self_test.rs` | `--self-test <dir>`: both voices end to end, no window |
-| `src/i18n.js`, `src-tauri/src/i18n.rs` | The interface in English and Brazilian Portuguese, following the Mac's language (first preferred language `pt…` → Portuguese, anything else → English). Rust decides; the windows ask it (`ui_language`). Permission texts in `src-tauri/lproj/<lang>.lproj/InfoPlist.strings` |
-| `src/main.js`, `src/index.html` | The floating player: parts ahead, word highlight, keys |
-| `src/reading.js` | Pure logic: how a text becomes parts, word timing, the clock. Tested by `reading.test.js`; the web page at ciromaciel.click uses a copy of it |
-| `src/settings.*` | The settings window |
-| `scripts/assets.mjs` | Regenerates the icons (committed; a build never needs it) |
-| `scripts/release/` | Signed and notarized build, publishing, the one-line installer; used by `.github/workflows/release.yml` |
+| `Sources/TextToSpeech/main.swift` | The app: menu bar glyph and menu, the reading shortcut, Esc while reading, the window, single instance, end-to-end commands |
+| `Sources/TextToSpeech/Reading.swift` | Pure logic, ported rule for rule from 0.x `reading.js`: how a text becomes parts, when each word is spoken, the clock |
+| `Sources/TextToSpeech/Player.swift` | The reading session (parts ahead, pause, jump, speed) and the floating player |
+| `Sources/TextToSpeech/Playback.swift` | Plays the MP3 as it arrives: AudioFileStream, AVAudioConverter, AVAudioPlayerNode with time-pitch |
+| `Sources/TextToSpeech/Voice.swift` | `POST /speak-stream` (NDJSON) and reading the selection (⌘C with a sentinel, clipboard put back) |
+| `Sources/TextToSpeech/Settings.swift` | Settings (UserDefaults) and the one-time import of the 0.x `config.json` |
+| `Sources/TextToSpeech/Screens.swift` | The window's panes |
+| `Sources/TextToSpeech/MacShell.swift`, `Theme.swift`, `Components.swift`, `Controls.swift` | The house frame and controls, the same as Cleaner and Speech to Text |
+| `Resources/` | App icon, Montserrat, Tabler and menu bar icons as template PDFs, `en.lproj` and `pt-BR.lproj` |
+| `scripts/build.sh`, `dist.sh`, `check.sh`, `assets.mjs` | Build and sign; bump, notarize and install; end-to-end check; regenerate the icon PDFs |
+| `scripts/fixtures/` | 0.x `reading.js` answers, frozen, that `check.sh` compares the Swift port with |
+| `scripts/release/` | `.dmg`, publishing to blob.ciromaciel.click, the one-line installer; used by `.github/workflows/release.yml` |
 
 ## Before you say it works
 
 ```bash
-bun test src
-bun run build
-"/tmp/tts-target/release/bundle/macos/Text to Speech.app/Contents/MacOS/text-to-speech" --self-test /tmp/tts-check
+scripts/build.sh
+scripts/check.sh
 ```
 
-The Rust target is `/tmp/tts-target` (`src-tauri/.cargo/config.toml`), because espeak-ng fails to build on long paths.
+`check.sh` compares the reading logic with the frozen answers, then runs a copy of the app under another identifier with `TTS_DATA_DIR` in a temporary folder and reads a short text through the real server, out loud. The hooks (`TTS_E2E_TRIGGER`, `TTS_DATA_DIR`, `--reading <cases.json>`) drive any other check; never run one against the person's own data folder.
 
 ## Rules that must hold
 
-- No secret in the app or the repository: the server holds the Fish Audio key.
-- Network calls: the configured voice server (text and speed only, Rafael only) and the Piper voice download. Nothing else, and no remote fonts or scripts in `src/`.
-- The bundle identifier `click.ciromaciel.text-to-speech` never changes: macOS ties Accessibility to it.
-- The version lives in `package.json`; bumping it on `main` is a release.
-- Bun, never npm. Code, comments and file names are in English.
-- Every user-facing string exists in English and Brazilian Portuguese (`src/i18n.js`, `src-tauri/src/i18n.rs`, `src-tauri/lproj/`); a change that adds text adds both. The voices speak Brazilian Portuguese in both languages: the spoken samples stay in Portuguese.
-
-To see the windows in each language, launch the built app with `--open-settings <tab>` (`shortcut`, `voice`, `player`, `system`) and `-AppleLanguages "(en)"` or `-AppleLanguages "(pt-BR)"`; with `HOME` pointed at an empty folder it leaves your settings alone.
+- The text goes only to the configured server (`serverURL`, `TEXT_TO_SPEECH_SERVER`, else `manager.ciromaciel.click/text-to-speech`), part by part. The app holds no Fish key. No other network call.
+- The server's `speak-stream` route (in `ciro-maciel/applications`, `apps/text-to-speech/manager`) is what the app needs; `speak-timed` stays for 0.x copies and the web page.
+- The bundle identifier `click.ciromaciel.text-to-speech` and the executable name `text-to-speech` never change, and builds are signed with the same identity: macOS ties Accessibility to them, and the 0.x login item points to the executable.
+- The version lives in `VERSION`. Publishing is the release workflow, run by hand, or `scripts/dist.sh` and the release scripts locally.
+- Code, comments and file names are in English.
+- Every user-facing string exists in English and Brazilian Portuguese: `Resources/en.lproj` and `Resources/pt-BR.lproj`, always the same keys in both. Every on-screen string goes through `L(...)`.
+- The window follows the house frame (Cleaner's): logotype, grouped menu, status line, version line. Icons only from Tabler, as template PDFs made by `scripts/assets.mjs`.

@@ -1,5 +1,0 @@
-# Piper's dependency espeak-ng is compiled from source, and its build fails on long paths.
-# A short target directory outside the clone keeps it working wherever the repository lives.
-# The bundle lands in /tmp/tts-target/release/bundle.
-[build]
-target-dir = "/tmp/tts-target"

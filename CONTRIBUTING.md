@@ -5,32 +5,29 @@ Thanks for helping. Text to Speech reads whatever people select, from any app, s
 ## Setup
 
 ```bash
-bun install
-bun run dev
+scripts/build.sh             # → dist/Text to Speech.app
 ```
 
-You need the Xcode Command Line Tools, Rust, Bun and CMake. Use Bun, not npm: there is one lockfile, `bun.lock`.
+You need macOS 14 or later on Apple Silicon and the Xcode Command Line Tools (Swift 5.10 or later). There are no dependencies.
 
 ## Before you open a pull request
 
-Run the tests, build the app and check that the packaged build reads aloud with both voices. The check runs with no window and keeps everything in the folder you give it:
+Build the app and run the end-to-end check on your Mac. It checks the reading logic against the frozen answers of 0.x, then runs a copy of the app under another identifier and reads a short text through the server, out loud:
 
 ```bash
-bun test src
-bun run build
-"/tmp/tts-target/release/bundle/macos/Text to Speech.app/Contents/MacOS/text-to-speech" --self-test /tmp/tts-check
-afplay /tmp/tts-check/rafael.mp3 && afplay /tmp/tts-check/piper.wav
+scripts/build.sh
+scripts/check.sh
 ```
 
-Then select some text in another app and press the shortcut. If your change touches a window, attach a capture.
+If your change touches the window or the player, attach a capture.
 
 ## House rules
 
-- **The text goes only where the person chose.** With Piper it never leaves the Mac. With Rafael it goes to the configured server and nowhere else. A new network call needs a reason in the pull request and a line in the README's Privacy section.
-- No analytics, no account, no remote font or script: the windows load only what is in `src/`.
+- **The text goes only where the person chose.** It goes to the configured server, part by part, and nowhere else. A new network call needs a reason in the pull request and a line in the README's Privacy section.
+- No analytics, no account, no remote font or image.
 - The clipboard is put back the way it was after the selection is read.
 - Code, comments and file names in English.
-- Every user-facing string exists in English and Brazilian Portuguese (`src/i18n.js`, `src-tauri/src/i18n.rs`, `src-tauri/lproj/`); a change that adds text adds both. The app follows the Mac's language; to check both, run the built app with `--open-settings voice -AppleLanguages "(en)"` and then `"(pt-BR)"`.
+- Every user-facing string exists in English and Brazilian Portuguese, with the same keys in `Resources/en.lproj` and `Resources/pt-BR.lproj`; a change that adds text adds both.
 - The bundle identifier (`click.ciromaciel.text-to-speech`) never changes: macOS ties Accessibility to it.
 
 ## Reporting a bug
