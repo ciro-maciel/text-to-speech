@@ -28,6 +28,8 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$RESOURCES"
 # The executable keeps the 0.x name, which the 0.x login item points to.
 cp "$BIN" "$APP/Contents/MacOS/text-to-speech"
+# The symbols out of the shipped binary: half its size. Crash reports still locate each frame.
+strip -rSTx "$APP"/Contents/MacOS/*
 # Every build carries VERSION; the window's footer reads it back.
 sed "s/__VERSION__/$VERSION/g" "$ROOT/Resources/Info.plist" > "$APP/Contents/Info.plist"
 cp -R "$ROOT/Resources/AppIcon.icns" "$ROOT/Resources/Fonts" "$ROOT/Resources/Icons" \
