@@ -24,6 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private enum HotKey: UInt32 { case speak = 1, escape = 2 }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        let isLogin = LoginLaunch.isNow()
         let id = Bundle.main.bundleIdentifier ?? ""
         if NSRunningApplication.runningApplications(withBundleIdentifier: id).contains(where: { $0 != .current }) {
             DistributedNotificationCenter.default().postNotificationName(.init("\(id).open"), object: nil, deliverImmediately: true)
@@ -42,7 +43,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         setUpMenuBar()
         registerShortcuts()
         E2E.watch { [weak self] command in self?.run(command) }
-        if !AXIsProcessTrusted() && !E2E.isOn { openWindow(.shortcut) }
+        // Opened at login it stays in the menu bar, even without Accessibility.
+        if !AXIsProcessTrusted() && !E2E.isOn && !isLogin { openWindow(.shortcut) }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
