@@ -1,0 +1,12 @@
+Como ficou.
+
+O colar está consertado. A versão 1.1.1 está publicada.
+
+Clique em Voz e confirme Davi · Phonon.
+Cole com Cmd+V e aperte Enter.
+
+Voz, Memória.
+
+Davi, ~170 MB.
+
+Veja o repositório e o check.sh.

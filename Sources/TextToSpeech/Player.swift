@@ -95,7 +95,8 @@ final class ReadingSession: ObservableObject {
     private static let secondsPerChar = 0.057
 
     init(text: String, speed: Double, engine: VoiceEngine) {
-        parts = Reading.split(text).map(Part.init)
+        // Only the words are read: Markdown and HTML marks out first (Speakable).
+        parts = Reading.split(Speakable.clean(text)).map(Part.init)
         self.speed = speed
         self.engine = engine
     }

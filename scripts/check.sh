@@ -34,6 +34,28 @@ print(f"       {len(want)} cases, {len(diffs)} differences")
 sys.exit(1 if diffs or len(got) != len(want) else 0)
 PY
 
+"$SOURCE/Contents/MacOS/text-to-speech" --speakable "$ROOT/scripts/fixtures/speakable-input.md" > "$WORK/speakable.txt"
+cmp -s "$WORK/speakable.txt" "$ROOT/scripts/fixtures/speakable-expected.txt" \
+    && ok "Markdown and HTML marks are not read (headings, bold, lists, tables, links, comments)" \
+    || { bad "the text to read differs from scripts/fixtures/speakable-expected.txt"; diff "$WORK/speakable.txt" "$ROOT/scripts/fixtures/speakable-expected.txt" | head -8; }
+
+# Phonon's part silence: 0.5 s quiet, 0.5 s tone, 0.8 s quiet → about 40 ms before and 250 ms after.
+python3 -I - "$WORK/silence.wav" <<'PY2'
+import sys, wave, math, array
+sr = 24000
+a = array.array('h', [0] * int(0.5 * sr) + [int(8000 * math.sin(i / 8)) for i in range(int(0.5 * sr))] + [0] * int(0.8 * sr))
+w = wave.open(sys.argv[1], 'wb'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr); w.writeframes(a.tobytes()); w.close()
+PY2
+"$SOURCE/Contents/MacOS/text-to-speech" --trim "$WORK/silence.wav" "$WORK/trimmed.wav"
+python3 -I - "$WORK/trimmed.wav" <<'PY2' && ok "silence at the ends of a Phonon part is trimmed (no long pause between parts)" || bad "the part's silence was not trimmed"
+import sys, wave, array
+w = wave.open(sys.argv[1]); sr = w.getframerate(); a = array.array('h', w.readframes(w.getnframes()))
+i = [k for k, x in enumerate(a) if abs(x) > 600]
+lead, tail = i[0] / sr, (len(a) - 1 - i[-1]) / sr
+print(f"       before the voice {lead*1000:.0f} ms, after {tail*1000:.0f} ms")
+sys.exit(0 if 0.02 <= lead <= 0.06 and 0.2 <= tail <= 0.3 else 1)
+PY2
+
 cp -R "$SOURCE" "$APP"
 plutil -replace CFBundleIdentifier -string "$ID" "$APP/Contents/Info.plist"
 codesign --force --sign - --identifier "$ID" "$APP" 2>/dev/null

@@ -316,6 +316,20 @@ enum E2E {
     }
 }
 
+// `--speakable <file>`: what would be read from a selection, for scripts/check.sh.
+if let i = CommandLine.arguments.firstIndex(of: "--speakable"), i + 1 < CommandLine.arguments.count,
+   let text = try? String(contentsOfFile: CommandLine.arguments[i + 1], encoding: .utf8) {
+    FileHandle.standardOutput.write(Data(Speakable.clean(text).utf8))
+    exit(0)
+}
+
+// `--trim <in.wav> <out.wav>`: Phonon's silence trimmed as a part is, for scripts/check.sh.
+if let i = CommandLine.arguments.firstIndex(of: "--trim"), i + 2 < CommandLine.arguments.count,
+   let wav = FileManager.default.contents(atPath: CommandLine.arguments[i + 1]) {
+    FileManager.default.createFile(atPath: CommandLine.arguments[i + 2], contents: Wave.trimmed(wav))
+    exit(0)
+}
+
 // `--reading <file.json>`: the reading logic alone, for scripts/check.sh to compare with the 1.x
 // reading.js. In: [{text, spoken: [{text, start}], duration}]; out: [{parts, times}].
 if let i = CommandLine.arguments.firstIndex(of: "--reading"), i + 1 < CommandLine.arguments.count,

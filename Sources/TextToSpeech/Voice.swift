@@ -187,7 +187,7 @@ enum Phonon {
             NSLog("[phonon] exit %d: %@", status, String(log.suffix(600)))
             throw Voice.Failure(message: message(forLog: log))
         }
-        return wav
+        return Wave.trimmed(wav)
     }
 
     /// The command's log, read for the one thing the person can fix. Hugging Face answers the same
@@ -206,6 +206,40 @@ enum Phonon {
 
 /// Seconds of audio in a WAV: its `fmt ` chunk gives the byte rate, its `data` chunk the length.
 enum Wave {
+    /// Phonon ends each part with 0.6 to 0.8 s of silence and starts it with about 0.17 s
+    /// (measured 12/11/2026); one part after another, that was close to a second of nothing at
+    /// every seam. Keep 40 ms before the voice and 250 ms after, about a sentence's own pause.
+    /// 16-bit mono PCM only; anything else goes back as it came.
+    static func trimmed(_ data: Data, lead: Double = 0.04, tail: Double = 0.25, threshold: Int16 = 600) -> Data {
+        let bytes = [UInt8](data)
+        func u16(_ at: Int) -> Int { at + 2 <= bytes.count ? Int(bytes[at]) | Int(bytes[at + 1]) << 8 : 0 }
+        func u32(_ at: Int) -> Int { u16(at) | u16(at + 2) << 16 }
+        var at = 12, rate = 0, channels = 0, bits = 0, start = -1, length = 0
+        while at + 8 <= bytes.count {
+            let id = String(bytes: bytes[at..<at + 4], encoding: .ascii) ?? ""
+            let size = u32(at + 4)
+            if id == "fmt " { channels = u16(at + 10); rate = u32(at + 12); bits = u16(at + 22) }
+            if id == "data" { start = at + 8; length = min(size, bytes.count - start); break }
+            at += 8 + size + (size & 1)
+        }
+        guard start > 0, channels == 1, bits == 16, rate > 0, length >= 4 else { return data }
+        let samples: [Int16] = bytes[start..<start + length - length % 2].withUnsafeBytes { Array($0.bindMemory(to: Int16.self)) }
+        guard let first = samples.firstIndex(where: { abs(Int($0)) > Int(threshold) }),
+              let last = samples.lastIndex(where: { abs(Int($0)) > Int(threshold) }) else { return data }
+        let from = max(0, first - Int(lead * Double(rate)))
+        let to = min(samples.count, last + 1 + Int(tail * Double(rate)))
+        let kept = samples[from..<to]
+        var out = Data()
+        func put32(_ v: Int) { withUnsafeBytes(of: UInt32(v).littleEndian) { out.append(contentsOf: $0) } }
+        func put16(_ v: Int) { withUnsafeBytes(of: UInt16(v).littleEndian) { out.append(contentsOf: $0) } }
+        let dataBytes = kept.count * 2
+        out.append(contentsOf: Array("RIFF".utf8)); put32(36 + dataBytes); out.append(contentsOf: Array("WAVE".utf8))
+        out.append(contentsOf: Array("fmt ".utf8)); put32(16); put16(1); put16(1); put32(rate); put32(rate * 2); put16(2); put16(16)
+        out.append(contentsOf: Array("data".utf8)); put32(dataBytes)
+        kept.withUnsafeBytes { out.append(contentsOf: $0) }
+        return out
+    }
+
     static func seconds(_ data: Data) -> Double {
         let bytes = [UInt8](data)
         func u32(_ at: Int) -> Int { at + 4 <= bytes.count ? Int(bytes[at]) | Int(bytes[at + 1]) << 8 | Int(bytes[at + 2]) << 16 | Int(bytes[at + 3]) << 24 : 0 }
