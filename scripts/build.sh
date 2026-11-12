@@ -39,8 +39,10 @@ cp -R "$ROOT/Resources/AppIcon.icns" "$ROOT/Resources/Fonts" "$ROOT/Resources/Ic
 # official release archive, pinned by version and SHA-256, cached in .build. It goes next to the
 # app's executable, where Bundle.main finds it, after the strip above: a third party's binary
 # is shipped as released.
-PTTS_VERSION="0.7.0"
-PTTS_SHA256="14b41430c53a08c1666518210f066a5dc3537fc1d191a0d284f6db1451fd2659"
+# 0.6.0, the version the CCM Stack voice runs: same model, same take every call. 0.7.0 gave a
+# different take on each call and Ciro heard less of the speech's nuance (12/11/2026).
+PTTS_VERSION="0.6.0"
+PTTS_SHA256="6d66f66a24c74032b518c55a299a85e9950755bee5de13041c731070eeddf11d"
 PTTS_ARCHIVE="$ROOT/.build/ptts-$PTTS_VERSION-aarch64-apple-darwin.tar.gz"
 if [ ! -f "$PTTS_ARCHIVE" ] || ! echo "$PTTS_SHA256  $PTTS_ARCHIVE" | shasum -a 256 -c - >/dev/null 2>&1; then
     mkdir -p "$ROOT/.build"

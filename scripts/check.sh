@@ -47,11 +47,12 @@ rafael=$("$SOURCE/Contents/MacOS/text-to-speech" --parts fish "$ROOT/scripts/fix
     && ok "a spoken summary is one Davi call (as in the CCM Stack), $rafael Rafael parts" \
     || bad "a spoken summary became $davi Davi part(s) and $rafael Rafael part(s)"
 
-# Phonon's part silence: 0.5 s quiet, 0.5 s tone, 0.8 s quiet → about 40 ms before and 250 ms after.
+# Phonon's part silence: 0.5 s quiet, 0.5 s tone (-30 LUFS, quieter than raw Phonon), 0.8 s
+# quiet → about 40 ms before and 250 ms after.
 python3 -I - "$WORK/silence.wav" <<'PY2'
 import sys, wave, math, array
 sr = 24000
-a = array.array('h', [0] * int(0.5 * sr) + [int(8000 * math.sin(i / 8)) for i in range(int(0.5 * sr))] + [0] * int(0.8 * sr))
+a = array.array('h', [0] * int(0.5 * sr) + [int(2000 * math.sin(i / 8)) for i in range(int(0.5 * sr))] + [0] * int(0.8 * sr))
 w = wave.open(sys.argv[1], 'wb'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr); w.writeframes(a.tobytes()); w.close()
 PY2
 "$SOURCE/Contents/MacOS/text-to-speech" --trim "$WORK/silence.wav" "$WORK/trimmed.wav"
@@ -63,6 +64,19 @@ lead, tail = i[0] / sr, (len(a) - 1 - i[-1]) / sr
 print(f"       before the voice {lead*1000:.0f} ms, after {tail*1000:.0f} ms")
 sys.exit(0 if 0.02 <= lead <= 0.06 and 0.2 <= tail <= 0.3 else 1)
 PY2
+
+# The same loudness as the CCM Stack voice (ffmpeg loudnorm, -16 LUFS, peaks under -1.5 dB).
+if command -v ffmpeg >/dev/null; then
+    m=$(ffmpeg -hide_banner -i "$WORK/trimmed.wav" -af loudnorm=I=-16:TP=-1.5:print_format=summary -f null - 2>&1)
+    lufs=$(echo "$m" | awk '/Input Integrated/{print $3}'); peak=$(echo "$m" | awk '/Input True Peak/{print $4}')
+    awk -v l="$lufs" -v p="$peak" 'BEGIN { exit !(l >= -17 && l <= -15 && p <= -1) }' \
+        && ok "a Phonon part plays at the CCM Stack loudness ($lufs LUFS, peak $peak dB)" \
+        || bad "a Phonon part is at $lufs LUFS, peak $peak dB (want -16, under -1.5)"
+fi
+
+# The same Phonon command as the CCM Stack voice: 0.7.0 gave a different take on every call.
+v=$("$SOURCE/Contents/MacOS/ptts" --version 2>/dev/null)
+[ "$v" = "ptts 0.6.0" ] && ok "Phonon runs ptts 0.6.0, the one the CCM Stack voice runs" || bad "the app ships $v, not ptts 0.6.0"
 
 cp -R "$SOURCE" "$APP"
 plutil -replace CFBundleIdentifier -string "$ID" "$APP/Contents/Info.plist"
@@ -147,7 +161,7 @@ printf 'hf_colagemteste9876' | pbcopy
 sleep 2.5; send "open voice"; sleep 1; send focus-field; send "key cmd+v"; send enter; sleep 0.5
 printf '%s' "$saved_clipboard" | pbcopy
 [ "$(cat "$WORK/data-phonon/huggingface-token.secret" 2>/dev/null)" = hf_colagemteste9876 ] \
-    && ok "⌘V pastes a key into the Voice pane" || bad "⌘V did not paste into the key field"
+    && ok "⌘V pastes a key into the Voice pane" || bad "⌘V did not paste into the key field ($(grep -o '\[e2e\] focus.*' "$WORK/app.log" | tail -1))"
 
 print "$([ $fails = 0 ] && echo "Check passed" || echo "$fails failure(s)")"
 exit $fails

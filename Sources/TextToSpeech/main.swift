@@ -270,8 +270,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 for sub in view.subviews { if let found = field(in: sub) { return found } }
                 return nil
             }
+            // A click also brings the app forward; without it, with another app in front (the
+            // person at work during the check), the window is not key and ⌘V lands nowhere.
+            NSApp.activate(ignoringOtherApps: true)
             window?.makeKeyAndOrderFront(nil)
             if let content = window?.contentView, let target = field(in: content) { window?.makeFirstResponder(target) }
+            NSLog("[e2e] focus key=%@ editing=%@", window?.isKeyWindow == true ? "yes" : "no",
+                  window?.firstResponder is NSTextView ? "yes" : "no")
         case "key":
             // "key cmd+v": the key equivalent goes through the main menu, the path AppKit takes for a
             // real ⌘ key that no view handles.

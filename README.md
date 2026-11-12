@@ -40,7 +40,7 @@ The app asks for one permission, **Accessibility**: reading the selection sends 
 | Left / Right arrow | Back or forward one part |
 | - / + | Slower or faster |
 
-The text is read in parts, whole paragraphs where it can, so the voice keeps the sense of what it reads. With Rafael the first part is short, and its audio plays while it still arrives, so the voice starts in under a second even on a long text. Davi says up to 150 words in one go (under 3 seconds to make on the Mac), so a short text keeps one intonation from start to end. Marks that are not words (Markdown, HTML, comments) are not read; an `<!-- voice: ... -->` summary is.
+The text is read in parts, whole paragraphs where it can, so the voice keeps the sense of what it reads. With Rafael the first part is short, and its audio plays while it still arrives, so the voice starts in under a second even on a long text. Davi says up to 150 words in one go (under 3 seconds to make on the Mac), so a short text keeps one intonation from start to end, at the same loudness as the CCM Stack voice. Marks that are not words (Markdown, HTML, comments) are not read; an `<!-- voice: ... -->` summary is.
 
 ## The two voices
 

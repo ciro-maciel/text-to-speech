@@ -27,6 +27,9 @@ final class StreamPlayer {
     /// `format` is the parser's hint: MP3 pieces from Fish as they arrive, or Phonon's whole WAV.
     init(rate: Double, format: AudioFormat = .mp3) {
         pitch.rate = Float(rate)
+        // The CCM Stack voice is sped up by ffmpeg's atempo, which keeps the speech whole; the
+        // default overlap (8) blurs consonants at 1.5x. 32 is the most this unit takes.
+        pitch.overlap = 32
         engine.attach(node)
         engine.attach(pitch)
         AudioFileStreamOpen(Unmanaged.passUnretained(self).toOpaque(), propertyListener, packetsListener,

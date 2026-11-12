@@ -215,7 +215,8 @@ enum Phonon {
 enum Wave {
     /// Phonon ends each part with 0.6 to 0.8 s of silence and starts it with about 0.17 s
     /// (measured 12/11/2026); one part after another, that was close to a second of nothing at
-    /// every seam. Keep 40 ms before the voice and 250 ms after, about a sentence's own pause.
+    /// every seam. Keep 40 ms before the voice and 250 ms after, about a sentence's own pause;
+    /// then the loudness the CCM Stack voice has (`louder`).
     /// 16-bit mono PCM only; anything else goes back as it came.
     static func trimmed(_ data: Data, lead: Double = 0.04, tail: Double = 0.25, threshold: Int16 = 600) -> Data {
         let bytes = [UInt8](data)
@@ -235,7 +236,7 @@ enum Wave {
               let last = samples.lastIndex(where: { abs(Int($0)) > Int(threshold) }) else { return data }
         let from = max(0, first - Int(lead * Double(rate)))
         let to = min(samples.count, last + 1 + Int(tail * Double(rate)))
-        let kept = samples[from..<to]
+        let kept = louder(Array(samples[from..<to]), rate: Double(rate))
         var out = Data()
         func put32(_ v: Int) { withUnsafeBytes(of: UInt32(v).littleEndian) { out.append(contentsOf: $0) } }
         func put16(_ v: Int) { withUnsafeBytes(of: UInt16(v).littleEndian) { out.append(contentsOf: $0) } }
@@ -245,6 +246,56 @@ enum Wave {
         out.append(contentsOf: Array("data".utf8)); put32(dataBytes)
         kept.withUnsafeBytes { out.append(contentsOf: $0) }
         return out
+    }
+
+    /// The CCM Stack voice plays Phonon through ffmpeg's loudnorm at -16 LUFS; Phonon comes out
+    /// near -22.6 LUFS (measured 12/11/2026), so here it played about 6.6 dB quieter. Same target:
+    /// loudness measured as BS.1770 does (K filter, 400 ms blocks, -70 and -10 gates), one gain to
+    /// -16 LUFS, and peaks over -1.5 dBFS bent under it by a soft limiter instead of clipped.
+    static func louder(_ samples: [Int16], rate: Double, target: Double = -16, ceiling: Double = -1.5) -> [Int16] {
+        guard let loudness = loudness(samples, rate: rate) else { return samples }
+        let gain = pow(10, (target - loudness) / 20) / 32768
+        let top = pow(10, ceiling / 20), knee = top * 0.7
+        return samples.map { sample in
+            var y = Double(sample) * gain
+            let m = abs(y)
+            if m > knee { y = (y < 0 ? -1 : 1) * (knee + (top - knee) * tanh((m - knee) / (top - knee))) }
+            return Int16(max(-32768, min(32767, (y * 32768).rounded())))
+        }
+    }
+
+    /// Integrated loudness in LUFS (ITU-R BS.1770-4, mono); nil for silence. One pass, sample by
+    /// sample, keeping only a sum per 100 ms: a part's audio is never copied.
+    static func loudness(_ samples: [Int16], rate: Double) -> Double? {
+        // The K filter for any sample rate (the formulas libebur128 uses): a shelf, then a high-pass.
+        var k = tan(Double.pi * 1681.974450955533 / rate), q = 0.7071752369554196
+        let vh = pow(10, 3.999843853973347 / 20), vb = pow(vh, 0.4996667741545416)
+        var a0 = 1 + k / q + k * k
+        let sb = [(vh + vb * k / q + k * k) / a0, 2 * (k * k - vh) / a0, (vh - vb * k / q + k * k) / a0]
+        let sa = [2 * (k * k - 1) / a0, (1 - k / q + k * k) / a0]
+        k = tan(Double.pi * 38.13547087602444 / rate); q = 0.5003270373238773; a0 = 1 + k / q + k * k
+        let ha = [2 * (k * k - 1) / a0, (1 - k / q + k * k) / a0]
+        var s1 = 0.0, s2 = 0.0, t1 = 0.0, t2 = 0.0, h1 = 0.0, h2 = 0.0, u1 = 0.0, u2 = 0.0
+        let step = Int(0.1 * rate)
+        var sums: [Double] = [], sum = 0.0, n = 0
+        for sample in samples {
+            let x = Double(sample) / 32768
+            let t = sb[0] * x + sb[1] * s1 + sb[2] * s2 - sa[0] * t1 - sa[1] * t2
+            s2 = s1; s1 = x; t2 = t1; t1 = t
+            let u = t - 2 * h1 + h2 - ha[0] * u1 - ha[1] * u2
+            h2 = h1; h1 = t; u2 = u1; u1 = u
+            sum += u * u; n += 1
+            if n == step { sums.append(sum); sum = 0; n = 0 }
+        }
+        // 400 ms blocks, 75% overlap: four 100 ms sums each.
+        guard sums.count >= 4 else { return nil }
+        let powers = (0...(sums.count - 4)).map { i in sums[i..<i + 4].reduce(0, +) / Double(4 * step) }
+        func lufs(_ p: Double) -> Double { -0.691 + 10 * log10(p) }
+        let loud = powers.filter { $0 > 0 && lufs($0) > -70 }
+        guard !loud.isEmpty else { return nil }
+        let gate = lufs(loud.reduce(0, +) / Double(loud.count)) - 10
+        let kept = loud.filter { lufs($0) > gate }
+        return lufs(kept.reduce(0, +) / Double(max(1, kept.count)))
     }
 
     static func seconds(_ data: Data) -> Double {
