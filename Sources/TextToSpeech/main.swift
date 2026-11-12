@@ -35,6 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             MainActor.assumeIsolated { self?.openWindow(nil) }
         }
         NSApp.setActivationPolicy(.accessory)
+        NSApp.mainMenu = EditMenu.make()
         NSApp.appearance = NSAppearance(named: .aqua)
         Zen.registerFonts()
 
@@ -262,6 +263,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         case "faster": changeSpeed(0.25)
         case "slower": changeSpeed(-0.25)
         case "escape": stop()
+        case "focus-field":
+            // The first text field of the window takes the focus, as a click on it would.
+            func field(in view: NSView) -> NSView? {
+                if view is NSTextField, (view as? NSTextField)?.isEditable == true { return view }
+                for sub in view.subviews { if let found = field(in: sub) { return found } }
+                return nil
+            }
+            window?.makeKeyAndOrderFront(nil)
+            if let content = window?.contentView, let target = field(in: content) { window?.makeFirstResponder(target) }
+        case "key":
+            // "key cmd+v": the key equivalent goes through the main menu, the path AppKit takes for a
+            // real ⌘ key that no view handles.
+            let letter = String(arg.split(separator: "+").last ?? "")
+            if let event = NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: .command, timestamp: 0,
+                                            windowNumber: window?.windowNumber ?? 0, context: nil, characters: letter,
+                                            charactersIgnoringModifiers: letter, isARepeat: false, keyCode: 9) {
+                let handled = NSApp.mainMenu?.performKeyEquivalent(with: event) ?? false
+                NSLog("[e2e] key %@ handled=%@", arg, handled ? "yes" : "no")
+            }
+        case "enter":
+            (window?.firstResponder as? NSTextView)?.insertNewline(nil)
         case "open":
             openWindow(Pane(rawValue: arg))
             NSLog("[e2e] window %d", window?.windowNumber ?? 0)

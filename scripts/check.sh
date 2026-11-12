@@ -9,7 +9,8 @@
 #    ~/.ciromacielos/.env), a copy of the app under its own identifier (…text-to-speech.check), in
 #    a temporary data folder, reads a short text, driven through TTS_E2E_TRIGGER: the voice
 #    starts, words light up, Space pauses, + speeds up, → moves on, Esc stops, and a reading ends
-#    on its own. It plays aloud for a few seconds. Then, with no key, a reading must not start.
+#    on its own. It plays aloud for a few seconds. Then, with no key, a reading must not start,
+#    and ⌘V pastes a key into the Voice pane (the clipboard is put back after).
 set -u
 ROOT="${0:A:h:h}"
 SOURCE="${1:-$ROOT/dist/Text to Speech.app}"
@@ -107,6 +108,15 @@ s=$(state)
 [ "$(print -r -- "$s" | sed -n 's/.* parts=\([^ ]*\).*/\1/p')" = 0 ] && [ "$(print -r -- "$s" | sed -n 's/.* ready=\([^ ]*\).*/\1/p')" = no ] \
     && print -r -- "$s" | grep -q -E "hint=(Falta configurar a voz|The voice isn't set up)" \
     && ok "with no key, no reading starts and the set-up message shows" || bad "no-key case: $s"
+
+# ⌘V pastes into the key field: a menu bar app gets ⌘ keys only through an Edit menu.
+saved_clipboard=$(pbpaste)
+printf 'hf_colagemteste9876' | pbcopy
+# The no-key message holds the player for 1.8 s; wait for it to go, as a person would.
+sleep 2.5; send "open voice"; sleep 1; send focus-field; send "key cmd+v"; send enter; sleep 0.5
+printf '%s' "$saved_clipboard" | pbcopy
+[ "$(cat "$WORK/data-phonon/huggingface-token.secret" 2>/dev/null)" = hf_colagemteste9876 ] \
+    && ok "⌘V pastes a key into the Voice pane" || bad "⌘V did not paste into the key field"
 
 print "$([ $fails = 0 ] && echo "Check passed" || echo "$fails failure(s)")"
 exit $fails

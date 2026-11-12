@@ -105,3 +105,10 @@
 "select.applying" = "Applying…";
 "switch.on" = "On";
 "switch.off" = "Off";
+"edit.menu" = "Edit";
+"edit.undo" = "Undo";
+"edit.redo" = "Redo";
+"edit.cut" = "Cut";
+"edit.copy" = "Copy";
+"edit.paste" = "Paste";
+"edit.selectAll" = "Select All";
