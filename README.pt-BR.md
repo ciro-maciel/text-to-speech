@@ -40,7 +40,7 @@ O app pede uma permissão, a **Acessibilidade**: ler a seleção manda Cmd + C a
 | Seta para a esquerda / direita | Voltar ou avançar um trecho |
 | - / + | Mais devagar ou mais rápido |
 
-O texto é lido em trechos, parágrafos inteiros quando dá, para a voz manter o sentido do que lê. O primeiro trecho é curto, e o áudio dele toca enquanto ainda chega, então a voz começa em menos de um segundo mesmo num texto longo.
+O texto é lido em trechos, parágrafos inteiros quando dá, para a voz manter o sentido do que lê. No Rafael, o primeiro trecho é curto, e o áudio dele toca enquanto ainda chega, então a voz começa em menos de um segundo mesmo num texto longo. O Davi fala até 150 palavras de uma vez (menos de 3 segundos para gerar no Mac), então um texto curto mantém uma só entonação do começo ao fim. Marcas que não são palavras (Markdown, HTML, comentários) não são lidas; um resumo `<!-- voice: ... -->` é.
 
 ## As duas vozes
 

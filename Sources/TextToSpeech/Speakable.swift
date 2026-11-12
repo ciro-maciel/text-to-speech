@@ -1,7 +1,9 @@
 // What gets said: the selection without the marks that are not words. A selection copied from
 // Markdown or HTML (a chat answer, a README) carries `**`, `#`, backticks, table pipes, list
 // bullets, `[text](url)` and HTML comments; Fish skipped most of them, Phonon reads them
-// ("barra", "asterisco"). An HTML comment is not on screen, so it is not read at all.
+// ("barra", "asterisco"). An HTML comment is not on screen, so it is not read, except the spoken
+// summary an agent ends with (`<!-- voice: ... -->`): that one is written to be heard, and a
+// selection of only it was read as "nothing selected".
 import Foundation
 
 enum Speakable {
@@ -11,6 +13,7 @@ enum Speakable {
             guard let regex = try? NSRegularExpression(pattern: pattern, options: options) else { return }
             s = regex.stringByReplacingMatches(in: s, range: NSRange(s.startIndex..., in: s), withTemplate: template)
         }
+        replace("<!--[ \\t]*voice:[ \\t]*([\\s\\S]*?)[ \\t]*-->", "\n$1\n", .caseInsensitive) // the spoken summary
         replace("<!--[\\s\\S]*?-->", "")                                  // HTML comments, unseen
         replace("^[ \\t]*```[^\\n]*$", "", .anchorsMatchLines)                // code fence lines
         replace("!?\\[([^\\]]*)\\]\\([^)]*\\)", "$1")                     // [text](url) and images

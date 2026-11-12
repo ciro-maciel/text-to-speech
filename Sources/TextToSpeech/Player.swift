@@ -96,7 +96,7 @@ final class ReadingSession: ObservableObject {
 
     init(text: String, speed: Double, engine: VoiceEngine) {
         // Only the words are read: Markdown and HTML marks out first (Speakable).
-        parts = Reading.split(Speakable.clean(text)).map(Part.init)
+        parts = engine.parts(Speakable.clean(text)).map(Part.init)
         self.speed = speed
         self.engine = engine
     }

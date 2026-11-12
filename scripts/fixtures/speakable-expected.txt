@@ -10,3 +10,5 @@ Voz, Memória.
 Davi, ~170 MB.
 
 Veja o repositório e o check.sh.
+
+Consertei o colar e a versão nova já está instalada.

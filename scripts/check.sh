@@ -39,6 +39,14 @@ cmp -s "$WORK/speakable.txt" "$ROOT/scripts/fixtures/speakable-expected.txt" \
     && ok "Markdown and HTML marks are not read (headings, bold, lists, tables, links, comments)" \
     || { bad "the text to read differs from scripts/fixtures/speakable-expected.txt"; diff "$WORK/speakable.txt" "$ROOT/scripts/fixtures/speakable-expected.txt" | head -8; }
 
+# How each voice cuts a spoken summary (an agent's `<!-- voice: -->`, three sentences): Davi says it
+# in one call, as the CCM Stack voice does; Rafael starts with a short part.
+davi=$("$SOURCE/Contents/MacOS/text-to-speech" --parts phonon "$ROOT/scripts/fixtures/voice-summary.md" | grep -c .)
+rafael=$("$SOURCE/Contents/MacOS/text-to-speech" --parts fish "$ROOT/scripts/fixtures/voice-summary.md" | grep -c .)
+[ "$davi" = 1 ] && [ "$rafael" -gt 1 ] \
+    && ok "a spoken summary is one Davi call (as in the CCM Stack), $rafael Rafael parts" \
+    || bad "a spoken summary became $davi Davi part(s) and $rafael Rafael part(s)"
+
 # Phonon's part silence: 0.5 s quiet, 0.5 s tone, 0.8 s quiet → about 40 ms before and 250 ms after.
 python3 -I - "$WORK/silence.wav" <<'PY2'
 import sys, wave, math, array
@@ -86,7 +94,8 @@ field() { state | sed -n "s/.* $1=\([^ ]*\).*/\1/p"; }
 # read_through <name>: the whole reading scenario on the copy that is running.
 read_through() {
     local name=$1
-    send "speak Primeira frase do teste. Segunda frase, um pouco mais longa, para ver o destaque das palavras.\nUm segundo parágrafo, com mais algumas palavras para formar outro trecho. E mais uma frase aqui.\nO terceiro parágrafo também tem duas frases. Esta é a última delas, para fechar o texto do teste."
+    # Over 150 words, so Davi too has a next part for the arrow.
+    send "speak Primeira frase do teste. Segunda frase, um pouco mais longa, para ver o destaque das palavras.\nUm segundo parágrafo, com mais algumas palavras para formar outro trecho. E mais uma frase aqui.\nO terceiro parágrafo também tem duas frases. Esta é a última delas, para fechar o texto do teste.\nEste parágrafo existe para que o texto passe de cento e cinquenta palavras, o tamanho de uma chamada do Davi, e a seta tenha um trecho seguinte para onde ir. Ele fala de coisas simples, como o tempo, o café da manhã e o caminho até o trabalho, sem nenhum símbolo que precise de limpeza.\nEste parágrafo existe para que o texto passe de cento e cinquenta palavras, o tamanho de uma chamada do Davi, e a seta tenha um trecho seguinte para onde ir. Ele fala de coisas simples, como o tempo, o café da manhã e o caminho até o trabalho, sem nenhum símbolo que precise de limpeza.\nEste parágrafo existe para que o texto passe de cento e cinquenta palavras, o tamanho de uma chamada do Davi, e a seta tenha um trecho seguinte para onde ir. Ele fala de coisas simples, como o tempo, o café da manhã e o caminho até o trabalho, sem nenhum símbolo que precise de limpeza."
     # The first Phonon reading downloads the voice once (58 MB): up to a minute.
     for _ in {1..240}; do [ "$(field ready)" = yes ] && break; sleep 0.25; done
     [ "$(field ready)" = yes ] && ok "$name: the voice starts in $(field firstSoundMs) ms" || { bad "$name: no audio: $(field hint)"; return; }

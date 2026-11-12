@@ -10,6 +10,8 @@ enum Reading {
     static let firstPartMax = 12
     /// Then whole sentences, up to 25 words, then up to 45 (Ciro, 16/10/2026).
     static let startRamp = [25, 45]
+    /// Phonon reads paragraphs whole, packed up to this many words per call (VoiceEngine.parts).
+    static let wholeMax = 150
 
     private static let clauseEnd = try! NSRegularExpression(pattern: "[,;:—)]$")
     private static let lineEndsSentence = try! NSRegularExpression(pattern: "[.!?…:;][\"'”’»)\\]]*$")

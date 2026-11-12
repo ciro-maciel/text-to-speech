@@ -1,0 +1,1 @@
+<!-- voice: Pronto, a versão um ponto um ponto dois já está instalada, com o seu token e o Davi escolhido. Agora o aplicativo limpa os símbolos antes de ler, então não fala mais barra nem asterisco, e corta os silêncios entre os trechos, deixando a pausa do tamanho de um ponto final. É só selecionar um texto e apertar o atalho. -->

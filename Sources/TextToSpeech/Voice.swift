@@ -20,6 +20,13 @@ enum VoiceEngine: String, CaseIterable {
     var secret: Secret { self == .fish ? .fishKey : .huggingFaceToken }
     /// Parts generated at once: Fish takes several, Phonon one, so its memory stays at one model.
     var partsAtOnce: Int { self == .fish ? 3 : 1 }
+    /// How the text becomes parts. Fish comes over the internet, so it starts with a short part
+    /// and ramps up. Phonon makes 150 words in under 3 s on the Mac, and each call is said as a
+    /// whole: short parts gave each one its own intonation and a pause at every seam, where the
+    /// CCM Stack voice says the same text in one call. So Phonon reads whole paragraphs.
+    func parts(_ text: String) -> [String] {
+        self == .fish ? Reading.split(text) : Reading.splitIntoParagraphs(Reading.unwrapLines(text), max: Reading.wholeMax)
+    }
     var audioFormat: AudioFormat { self == .fish ? .mp3 : .wav }
 }
 

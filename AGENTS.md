@@ -10,7 +10,7 @@ Text to Speech is a native macOS menu bar app: AppKit and SwiftUI, one Swift pac
 | `Sources/TextToSpeech/Reading.swift` | Pure logic, ported rule for rule from 0.x `reading.js`: how a text becomes parts, when each word is spoken, the clock |
 | `Sources/TextToSpeech/Player.swift` | The reading session (parts ahead, pause, jump, speed) and the floating player |
 | `Sources/TextToSpeech/Playback.swift` | Plays the MP3 as it arrives: AudioFileStream, AVAudioConverter, AVAudioPlayerNode with time-pitch |
-| `Sources/TextToSpeech/Voice.swift` | The two voices: Fish (`/v1/tts/stream/with-timestamp`, SSE, the person's key) and Phonon (`ptts` per part, WAV), and reading the selection (⌘C with a sentinel, clipboard put back) |
+| `Sources/TextToSpeech/Voice.swift` | The two voices: Fish (`/v1/tts/stream/with-timestamp`, SSE, the person's key) and Phonon (`ptts` per part of up to 150 words, `VoiceEngine.parts`; WAV), and reading the selection (⌘C with a sentinel, clipboard put back) |
 | `Sources/TextToSpeech/Secrets.swift` | The Fish key and the Hugging Face token in the login keychain (a file in TTS_DATA_DIR for end-to-end runs) |
 | `Sources/TextToSpeech/Settings.swift` | Settings (UserDefaults) and the one-time import of the 0.x `config.json` |
 | `Sources/TextToSpeech/Screens.swift` | The window's panes |

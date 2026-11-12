@@ -14,3 +14,5 @@ Veja o [repositório](https://github.com/ciro-maciel/text-to-speech) e o `check.
 ---
 
 <!-- voice: Consertei o colar e a versão nova já está instalada. -->
+
+<!-- a note for editors, never read -->

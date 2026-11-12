@@ -323,6 +323,15 @@ if let i = CommandLine.arguments.firstIndex(of: "--speakable"), i + 1 < CommandL
     exit(0)
 }
 
+// `--parts <fish|phonon> <file>`: the parts each voice reads, one per line, for scripts/check.sh.
+if let i = CommandLine.arguments.firstIndex(of: "--parts"), i + 2 < CommandLine.arguments.count,
+   let engine = VoiceEngine(rawValue: CommandLine.arguments[i + 1]),
+   let text = try? String(contentsOfFile: CommandLine.arguments[i + 2], encoding: .utf8) {
+    let parts = engine.parts(Speakable.clean(text)).map { $0.replacingOccurrences(of: "\n", with: " ") }
+    FileHandle.standardOutput.write(Data((parts.joined(separator: "\n") + "\n").utf8))
+    exit(0)
+}
+
 // `--trim <in.wav> <out.wav>`: Phonon's silence trimmed as a part is, for scripts/check.sh.
 if let i = CommandLine.arguments.firstIndex(of: "--trim"), i + 2 < CommandLine.arguments.count,
    let wav = FileManager.default.contents(atPath: CommandLine.arguments[i + 1]) {
