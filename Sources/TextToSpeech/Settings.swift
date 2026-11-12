@@ -35,18 +35,14 @@ final class AppSettings: ObservableObject {
     @Published var speed: Double { didSet { defaults.set(speed, forKey: "speed") } }
     @Published var position: PlayerPosition { didSet { defaults.set(position.rawValue, forKey: "playerPosition") } }
     @Published var size: PlayerSize { didSet { defaults.set(size.rawValue, forKey: "playerSize") } }
+    /// Rafael through Fish with the person's key, or Davi through Phonon on this Mac. TTS_ENGINE
+    /// picks it for an end-to-end run.
+    @Published var engine: VoiceEngine { didSet { defaults.set(engine.rawValue, forKey: "engine") } }
 
     var onShortcutChange: () -> Void = {}
 
     static let defaultSpeak = Shortcut(keyCode: UInt32(kVK_ANSI_S), modifiers: [.command, .shift])
     static let speeds: [Double] = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
-
-    /// TEXT_TO_SPEECH_SERVER, then `serverURL` set by hand (`defaults write`), then ours.
-    var server: String {
-        let raw = ProcessInfo.processInfo.environment["TEXT_TO_SPEECH_SERVER"] ?? defaults.string(forKey: "serverURL") ?? Voice.defaultServer
-        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? Voice.defaultServer : String(trimmed.trimmingCharacters(in: CharacterSet(charactersIn: "/")))
-    }
 
     init() {
         let d = UserDefaults.standard
@@ -59,6 +55,7 @@ final class AppSettings: ObservableObject {
         speed = d.object(forKey: "speed") as? Double ?? 1
         position = PlayerPosition(rawValue: d.string(forKey: "playerPosition") ?? "") ?? .center
         size = PlayerSize(rawValue: d.string(forKey: "playerSize") ?? "") ?? .standard
+        engine = VoiceEngine(rawValue: ProcessInfo.processInfo.environment["TTS_ENGINE"] ?? d.string(forKey: "engine") ?? "") ?? .fish
     }
 
     private func saveShortcut(_ value: Shortcut?) {
@@ -88,7 +85,6 @@ enum TauriSettings {
         if let speed = json["speed"] as? Double { d.set(min(2, max(0.5, speed)), forKey: "speed") }
         if let position = json["player_position"] as? String, PlayerPosition(rawValue: position) != nil { d.set(position, forKey: "playerPosition") }
         if let size = json["player_size"] as? String, PlayerSize(rawValue: size) != nil { d.set(size, forKey: "playerSize") }
-        if let server = json["server_url"] as? String, !server.isEmpty { d.set(server, forKey: "serverURL") }
     }
 
     /// "CmdOrCtrl+Shift+KeyS", "Command+Alt+Digit2": the Tauri accelerator syntax with key codes.

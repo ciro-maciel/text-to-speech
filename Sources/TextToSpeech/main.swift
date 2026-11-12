@@ -114,7 +114,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func start(_ text: String) {
         stop()
-        let session = ReadingSession(text: text, speed: settings.speed, server: settings.server)
+        // No key for the chosen voice yet: say so and open the Voice pane, where the steps are.
+        guard settings.engine.secret.value != nil else {
+            flash(L("voice.setUp"))
+            openWindow(.voice)
+            return
+        }
+        let session = ReadingSession(text: text, speed: settings.speed, engine: settings.engine)
         guard !session.parts.isEmpty else { flash(L("player.nothingSelected")); return }
         self.session = session
         player.show(session, size: settings.size, position: settings.position)
@@ -135,7 +141,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     /// A message alone in the player ("Nothing selected"), for 1.8 s.
     private func flash(_ message: String) {
-        let session = ReadingSession(text: "", speed: settings.speed, server: settings.server)
+        let session = ReadingSession(text: "", speed: settings.speed, engine: settings.engine)
         session.hint = message
         self.session = session
         player.show(session, size: settings.size, position: settings.position)
@@ -226,7 +232,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             let root = AppView(nav: nav, settings: settings, shortcutsPaused: { [weak self] paused in
                 self?.areShortcutsPaused = paused
                 self?.registerShortcuts()
-            }, tryPlayer: { [weak self] in self?.start(L("player.sample")) })
+            }, tryPlayer: { [weak self] in self?.start(L("player.sample")) },
+               testVoice: { [weak self] in self?.start(L("voice.sample")) })
             window = MacShell.window(title: "Text to Speech", size: CGSize(width: 1040, height: 720),
                                      minSize: CGSize(width: 960, height: 640), autosave: "TextToSpeechWindow", root: root)
             window?.appearance = NSAppearance(named: .aqua)

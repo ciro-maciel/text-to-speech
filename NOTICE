@@ -13,8 +13,18 @@ The app bundles third-party material under its own license:
   are the letter T set in Candal, by Vernon Adams. SIL Open Font License 1.1.
   https://fonts.google.com/specimen/Candal
 
-The Rafael voice is made by Fish Audio (https://fish.audio) on the Text to Speech server;
-no part of it is in this repository or in the app.
+- ptts (Contents/MacOS/ptts), Phonon's command, by Gradium. MIT or Apache-2.0, at your option:
+  Contents/Resources/ptts/LICENSE-MIT and LICENSE-APACHE. https://github.com/gradium-ai/xn-ptts
+  Fetched by scripts/build.sh from the official release, pinned by version and SHA-256; not in
+  this repository.
+
+Voices, not part of this repository or of the app:
+
+- Davi runs on Phonon 40m Portuguese (https://huggingface.co/gradium/phonon-40m-pt), by
+  Gradium, CC BY-NC 4.0, downloaded by each person with their own Hugging Face token under the
+  terms they accept there. The Davi voice is from Gradium's catalog (gradium/phonon-voices),
+  Apache-2.0.
+- Rafael is made by Fish Audio (https://fish.audio), called with each person's own key.
 
 The name "Text to Speech by Ciro Cesar Maciel", the app icon and the logotype identify the
 maker's official build. A fork that ships its own build should use its own name and icon.

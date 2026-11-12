@@ -8,7 +8,7 @@ Um dos [seis apps de Mac grátis e de código aberto](#mais-de-ciro-cesar-maciel
 
 [![As seen on Open Source Alternatives](https://www.opensourcealternatives.to/badge-osa.svg)](https://www.opensourcealternatives.to) [![Text to Speech by Ciro Cesar Maciel | AlternativeTo](https://alternativeto.net/static/badges/badge-compact-color.svg)](https://alternativeto.net/software/text-to-speech-by-ciro-cesar-maciel/about/?utm_source=badge&utm_medium=referral)
 
-O Rafael, uma voz natural em português do Brasil do [Fish Audio](https://fish.audio), lê pela internet e começa em menos de um segundo: o áudio toca enquanto chega. Um player pequeno flutua na tela, mostra a palavra sendo falada e some quando a leitura termina. Sem conta e sem telemetria. Um app nativo de barra de menus, em Swift: 3 MB em disco e cerca de 30 MB de memória durante a leitura.
+Você escolhe quem lê: o **Davi**, do [Phonon](https://huggingface.co/gradium/phonon-40m-pt), que roda no seu Mac e não manda nada para fora depois de baixar a voz, ou o **Rafael**, do [Fish Audio](https://fish.audio), pela internet, com a sua própria chave. Um player pequeno flutua na tela, mostra a palavra sendo falada e some quando a leitura termina. Sem conta nossa e sem telemetria. Um app nativo de barra de menus, em Swift: 25 MB em disco; o Davi usa uns 170 MB de memória só enquanto gera um trecho.
 
 [English](README.md)
 
@@ -42,21 +42,32 @@ O app pede uma permissão, a **Acessibilidade**: ler a seleção manda Cmd + C a
 
 O texto é lido em trechos, parágrafos inteiros quando dá, para a voz manter o sentido do que lê. O primeiro trecho é curto, e o áudio dele toca enquanto ainda chega, então a voz começa em menos de um segundo mesmo num texto longo.
 
+## As duas vozes
+
+A tela **Voz** mostra os passos de cada uma, com os botões que abrem as páginas certas.
+
+**Davi, no seu Mac (Phonon).** O app traz o comando `ptts` da Gradium e roda o modelo Phonon em português do Brasil, em 4 bits. Para ligar:
+
+1. Crie uma conta grátis em [huggingface.co](https://huggingface.co).
+2. Abra a [página do modelo](https://huggingface.co/gradium/phonon-40m-pt) e peça acesso; a aprovação é automática.
+3. Crie um [token do tipo Read](https://huggingface.co/settings/tokens/new?tokenType=read) e cole em **Voz**.
+
+Na primeira leitura o app baixa a voz uma vez (58 MB). O modelo é da Gradium, com licença [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/): uso pessoal, não comercial, que você aceita no Hugging Face. A voz Davi é do catálogo da Gradium, Apache-2.0.
+
+**Rafael, pela internet (Fish Audio).** O app chama o Fish Audio direto, com a sua chave:
+
+1. Crie uma conta em [fish.audio](https://fish.audio).
+2. Abra as [chaves de API](https://fish.audio/app/api-keys/) e crie uma.
+3. Cole a chave em **Voz**.
+
+O modelo grátis do Fish termina em 30/11/2026; depois, o uso é cobrado pelo Fish, na sua conta.
+
 ## Privacidade: o que vai para onde
 
-Cada trecho do texto que você selecionou, e a velocidade, vão por HTTPS para o servidor do Text to Speech (`manager.ciromaciel.click`, o mesmo que a página [ciromaciel.click/tools/text-to-speech](https://ciromaciel.click/tools/text-to-speech?ref=oss-text-to-speech) usa). O servidor manda para o Fish Audio, que gera o áudio, e repassa o MP3 e o tempo de cada palavra conforme chegam. O servidor não guarda o texto. O app não guarda nenhuma chave de API.
+- **Davi:** o texto não sai do Mac. A única chamada de rede é o download da voz, uma vez, no Hugging Face, com o seu token.
+- **Rafael:** cada trecho do texto que você selecionou, e a velocidade, vão por HTTPS direto para o Fish Audio, na sua conta, que devolve o MP3 e o tempo de cada palavra.
 
-Mais nada sai do seu Mac: a fonte da interface vem dentro do app, e não há analytics, conta nem procura de atualização.
-
-### Use o seu próprio servidor
-
-O app chama `POST <servidor>/speak-stream` com `{ "text": "...", "speed": 1.0 }` e lê NDJSON de volta, uma linha por pedaço: `{ "audio": "<MP3 em base64>" }`, `{ "chunk": 0, "offset": 0, "words": [{ "text", "start", "end" }] }` (os tempos mais recentes de um bloco do texto, `offset` segundos dentro do trecho) e, no fim, `{ "done": true }`. Para apontar o app para um servidor seu:
-
-```bash
-defaults write click.ciromaciel.text-to-speech serverURL https://seu-servidor.exemplo/text-to-speech
-```
-
-ou defina `TEXT_TO_SPEECH_SERVER` no ambiente do app. Sem nenhum dos dois, o app usa o servidor público.
+A chave do Fish e o token do Hugging Face ficam nas Chaves do macOS, só no seu Mac. Mais nada sai do seu Mac: a fonte da interface vem dentro do app, e não há analytics, conta nem procura de atualização.
 
 ## Compilar você mesmo
 
@@ -66,7 +77,7 @@ Você precisa de macOS 14 ou mais novo em Apple Silicon e das Command Line Tools
 git clone https://github.com/ciro-maciel/text-to-speech.git
 cd text-to-speech
 scripts/build.sh             # → dist/Text to Speech.app
-scripts/check.sh             # a lógica de leitura, depois uma leitura curta em voz alta pelo servidor
+scripts/check.sh             # a lógica de leitura, depois uma leitura curta em voz alta com cada voz que tiver chave
 ```
 
 Sem um certificado Developer ID, o build é assinado ad hoc, então o macOS pede a Acessibilidade de novo a cada build. O `scripts/dist.sh` sobe a versão, compila, empacota o `.dmg`, manda a Apple notarizar (perfil `notary` do Keychain) e instala.
@@ -74,8 +85,9 @@ Sem um certificado Developer ID, o build é assinado ad hoc, então o macOS pede
 ## Limites
 
 - macOS 14 ou mais novo, em Apple Silicon.
-- O Rafael fala português do Brasil: texto em outro idioma sai com sotaque. A interface é em inglês e em português do Brasil, conforme o idioma do Mac.
-- A voz depende do servidor público e do Fish Audio; quando um deles está ocupado, um trecho pode falhar. Não há voz offline.
+- As duas vozes falam português do Brasil: texto em outro idioma sai com sotaque. A interface é em inglês e em português do Brasil, conforme o idioma do Mac.
+- O Davi não informa o tempo de cada palavra: o destaque no player é estimado pelo tamanho do texto. O Rafael destaca a palavra exata.
+- O Rafael depende do Fish Audio; quando ele está ocupado, um trecho pode falhar.
 - Ainda sem atualização automática: instale a versão nova do mesmo jeito que a primeira.
 
 ## Contribuir

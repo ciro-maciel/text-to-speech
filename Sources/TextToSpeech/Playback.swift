@@ -1,4 +1,5 @@
-// Plays an MP3 as it arrives: AudioFileStream cuts the bytes into MPEG packets, AVAudioConverter
+// Plays an MP3 as it arrives (or Phonon's WAV, through the same path): AudioFileStream cuts the
+// bytes into packets, AVAudioConverter
 // turns them into PCM, and AVAudioPlayerNode plays each buffer through a time-pitch unit, so the
 // speed changes without changing the voice. The voice starts with Fish's first piece (about
 // 0.7 s) instead of the whole sentence (1.5 to 3 s).
@@ -23,11 +24,13 @@ final class StreamPlayer {
     private let meter = LevelMeter()
     var onFinish: () -> Void = {}
 
-    init(rate: Double) {
+    /// `format` is the parser's hint: MP3 pieces from Fish as they arrive, or Phonon's whole WAV.
+    init(rate: Double, format: AudioFormat = .mp3) {
         pitch.rate = Float(rate)
         engine.attach(node)
         engine.attach(pitch)
-        AudioFileStreamOpen(Unmanaged.passUnretained(self).toOpaque(), propertyListener, packetsListener, kAudioFileMP3Type, &parser)
+        AudioFileStreamOpen(Unmanaged.passUnretained(self).toOpaque(), propertyListener, packetsListener,
+                            format == .mp3 ? kAudioFileMP3Type : kAudioFileWAVEType, &parser)
     }
 
     func feed(_ data: Data) {
@@ -98,7 +101,22 @@ final class StreamPlayer {
     }
 
     fileprivate func packets(_ count: UInt32, _ bytes: UInt32, _ data: UnsafeRawPointer, _ descriptions: UnsafeMutablePointer<AudioStreamPacketDescription>?) {
-        guard let input = inputFormat, let converter, let descriptions, count > 0 else { return }
+        guard let input = inputFormat, let converter, count > 0 else { return }
+        // A WAV's PCM comes without packet descriptions: its frames go straight into a PCM buffer.
+        guard let descriptions else {
+            let frameBytes = Int(input.streamDescription.pointee.mBytesPerFrame)
+            guard frameBytes > 0, let pcm = AVAudioPCMBuffer(pcmFormat: input, frameCapacity: AVAudioFrameCount(Int(bytes) / frameBytes)) else { return }
+            pcm.frameLength = pcm.frameCapacity
+            memcpy(pcm.audioBufferList.pointee.mBuffers.mData, data, Int(pcm.frameLength) * frameBytes)
+            var fed = false
+            convert(converter) { _, status in
+                if fed { status.pointee = .noDataNow; return nil }
+                fed = true
+                status.pointee = .haveData
+                return pcm
+            }
+            return
+        }
         var maxPacket = 0
         for i in 0..<Int(count) { maxPacket = max(maxPacket, Int(descriptions[i].mDataByteSize)) }
         let compressed = AVAudioCompressedBuffer(format: input, packetCapacity: AVAudioPacketCount(count), maximumPacketSize: maxPacket)

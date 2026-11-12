@@ -33,6 +33,7 @@ struct AppView: View {
     @ObservedObject var settings: AppSettings
     var shortcutsPaused: (Bool) -> Void
     var tryPlayer: () -> Void
+    var testVoice: () -> Void
 
     var body: some View {
         MacShellView {
@@ -79,17 +80,7 @@ struct AppView: View {
         }
     }
 
-    private var voice: some View {
-        SettingRows {
-            SettingRow(title: "Rafael", hint: L("voice.rafael.hint")) { SettingValue(text: L("voice.internet")) }
-            SettingRow(title: L("voice.speed"), hint: L("voice.speed.hint")) {
-                ZenSelect(value: PlayerView.speedText(settings.speed),
-                          choices: AppSettings.speeds.map { (String($0), PlayerView.speedText($0)) },
-                          selected: String(settings.speed), width: 160) { settings.speed = Double($0) ?? 1 }
-            }
-            .zIndex(5)
-        }
-    }
+    private var voice: some View { VoicePane(settings: settings, testVoice: testVoice) }
 
     private var player: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -106,6 +97,79 @@ struct AppView: View {
                 .zIndex(5)
             }
             Button(L("player.try"), action: tryPlayer).buttonStyle(ZenButtonStyle(kind: .secondary)).padding(.top, 24)
+        }
+    }
+}
+
+/// The voice: which one reads, the person's key for it, the steps to get that key, and a test.
+private struct VoicePane: View {
+    @ObservedObject var settings: AppSettings
+    var testVoice: () -> Void
+    /// Bumped when a key is saved or removed, so the row below reads the keychain again.
+    @State private var saved = 0
+
+    private var engine: VoiceEngine { settings.engine }
+
+    var body: some View {
+        let _ = saved
+        VStack(alignment: .leading, spacing: 0) {
+            SettingRows {
+                SettingRow(title: L("voice.choice"), hint: L("voice.choice.hint")) {
+                    ZenSelect(value: engine.title, choices: VoiceEngine.allCases.map { ($0.rawValue, $0.title) },
+                              selected: engine.rawValue, width: 280) { settings.engine = VoiceEngine(rawValue: $0) ?? .fish }
+                }
+                .zIndex(6)
+                SettingRow(title: L("\(engine.rawValue).key"),
+                           hint: engine.secret.hint.map { L("key.saved") + " " + $0 } ?? L("key.none")) {
+                    HStack(spacing: 8) {
+                        ZenTextField(placeholder: L("\(engine.rawValue).key.placeholder"), value: "", width: 240) { value in
+                            engine.secret.save(value)
+                            saved += 1
+                        }
+                        if engine.secret.value != nil {
+                            Button(L("key.remove")) { engine.secret.save(""); saved += 1 }
+                                .buttonStyle(ZenButtonStyle(kind: .secondary))
+                        }
+                    }
+                }
+                SettingRow(title: L("voice.speed"), hint: L("voice.speed.hint")) {
+                    ZenSelect(value: PlayerView.speedText(settings.speed),
+                              choices: AppSettings.speeds.map { (String($0), PlayerView.speedText($0)) },
+                              selected: String(settings.speed), width: 160) { settings.speed = Double($0) ?? 1 }
+                }
+                .zIndex(5)
+            }
+            VStack(alignment: .leading, spacing: 10) {
+                Text(L("\(engine.rawValue).steps.title")).font(Zen.font(13, .bold)).foregroundStyle(Zen.gray9)
+                ForEach(Array(steps.enumerated()), id: \.offset) { i, step in
+                    Text("\(i + 1). \(step)").font(Zen.font(13, .medium)).foregroundStyle(Zen.gray7)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                HStack(spacing: 8) {
+                    ForEach(Array(links.enumerated()), id: \.offset) { _, link in
+                        Button(link.0) { NSWorkspace.shared.open(link.1) }.buttonStyle(ZenButtonStyle(kind: .secondary))
+                    }
+                    Button(L("voice.test"), action: testVoice).buttonStyle(ZenButtonStyle(kind: .primary))
+                        .disabled(engine.secret.value == nil)
+                }
+                .padding(.top, 6)
+                Text(L("\(engine.rawValue).note")).font(Zen.font(12, .medium)).foregroundStyle(Zen.gray5)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.top, 24)
+        }
+    }
+
+    private var steps: [String] { (1...4).compactMap { n in
+        let key = "\(engine.rawValue).step\(n)"
+        let text = L(key)
+        return text == key ? nil : text
+    } }
+
+    private var links: [(String, URL)] {
+        switch engine {
+        case .fish: return [(L("fish.openKeys"), Fish.keysPage)]
+        case .phonon: return [(L("phonon.openModel"), Phonon.modelPage), (L("phonon.openTokens"), Phonon.tokensPage)]
         }
     }
 }

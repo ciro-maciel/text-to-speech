@@ -1,6 +1,6 @@
 // The reading and its window. The selection is cut into parts (Reading.split); a few are
-// generated ahead of the one playing, three at a time, as many as the server takes from one
-// person. The window shows the part being read with the word being spoken, the one before and
+// generated ahead of the one playing: three at a time with Fish, one at a time with Phonon, whose
+// model then sits in memory once. The window shows the part being read with the word being spoken, the one before and
 // the one after, a bar of the whole text's time and the clock. Space pauses, ← and → go back or
 // forward a part, − and + change the speed, Esc stops. The rules are the Tauri build's main.js.
 import AppKit
@@ -10,7 +10,7 @@ import SwiftUI
 
 @MainActor
 final class ReadingSession: ObservableObject {
-    /// One part's audio and timings, filled as they come from the server.
+    /// One part's audio and timings, filled as they come from the voice.
     final class Part {
         let text: String
         private(set) var data = Data()
@@ -30,14 +30,19 @@ final class ReadingSession: ObservableObject {
 
         init(text: String) { self.text = text }
 
-        /// MP3 at 64 kbit/s: 8000 bytes a second, which is how the server knows the length too.
-        var duration: Double { Double(data.count) / 8000 }
+        /// The format of `data`: MP3 at 64 kbit/s from Fish, WAV from Phonon.
+        private(set) var format: AudioFormat = .mp3
 
-        func start(speed: Double, server: String) {
-            self.speed = speed
+        /// MP3 at 64 kbit/s is 8000 bytes a second; a WAV says its own rate.
+        var duration: Double { format == .mp3 ? Double(data.count) / 8000 : Wave.seconds(data) }
+
+        /// Fish reads at the asked speed; Phonon always at 1×, the speed applied as a playback rate.
+        func start(speed: Double, engine: VoiceEngine) {
+            self.speed = engine == .fish ? speed : 1
+            format = engine.audioFormat
             task = Task { @MainActor in
                 do {
-                    for try await event in Voice.stream(text, speed: speed, server: server) {
+                    for try await event in Voice.stream(text, speed: self.speed, engine: engine) {
                         switch event {
                         case .audio(let bytes):
                             data.append(bytes)
@@ -71,7 +76,7 @@ final class ReadingSession: ObservableObject {
     }
 
     let parts: [Part]
-    let server: String
+    let engine: VoiceEngine
     @Published var index = 0
     @Published var isPaused = false
     @Published var hint: String?
@@ -85,32 +90,32 @@ final class ReadingSession: ObservableObject {
     let startedAt = Date()
     private(set) var firstSoundAt: Date?
 
-    private static let inFlight = 3, window = 4
+    private static let window = 4
     /// Before a part has audio the clock estimates from the text: seconds per character at 1×.
     private static let secondsPerChar = 0.057
 
-    init(text: String, speed: Double, server: String) {
+    init(text: String, speed: Double, engine: VoiceEngine) {
         parts = Reading.split(text).map(Part.init)
         self.speed = speed
-        self.server = server
+        self.engine = engine
     }
 
     var current: Part? { parts.indices.contains(index) ? parts[index] : nil }
 
-    /// Starts the parts the window needs next, three at a time: the server's share per person.
+    /// Starts the parts the window needs next, as many at once as the voice takes.
     private func ensureAhead() {
         var running = parts.filter { $0.isStarted && !$0.isComplete && $0.error == nil }.count
         for k in index..<min(parts.count, index + Self.window) {
             let part = parts[k]
             if part.isStarted { continue }
             // The part being read is always asked for, even past the limit.
-            if running >= Self.inFlight && k != index { break }
+            if running >= engine.partsAtOnce && k != index { break }
             running += 1
             part.onChange = { [weak self] in
                 guard let self, self.isLive else { return }
                 self.objectWillChange.send()
             }
-            part.start(speed: speed, server: server)
+            part.start(speed: speed, engine: engine)
         }
     }
 
@@ -143,7 +148,7 @@ final class ReadingSession: ObservableObject {
 
     /// Plays a part from its first byte, while the rest still comes; true when it played to the end.
     private func play(_ part: Part) async -> Bool {
-        let player = StreamPlayer(rate: speed / part.speed)
+        let player = StreamPlayer(rate: speed / part.speed, format: part.format)
         self.player = player
         if isPaused { player.pause() }
         return await withCheckedContinuation { continuation in
@@ -328,7 +333,7 @@ struct PlayerView: View {
                     }
                     .font(Zen.font(11, .medium)).foregroundStyle(Zen.gray4)
                 } else {
-                    Text("Rafael · " + Self.speedText(session.speed)).font(Zen.font(12, .medium)).foregroundStyle(Zen.gray3)
+                    Text(session.engine.speaker + " · " + Self.speedText(session.speed)).font(Zen.font(12, .medium)).foregroundStyle(Zen.gray3)
                 }
             }
         }
